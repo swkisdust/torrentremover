@@ -71,6 +71,11 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFil
 		return nil
 	}
 
+	if len(ft) < 1 {
+		slog.Info("no matching torrents found")
+		return nil
+	}
+
 	if reannounce {
 		slog.Info("reannouncing torrents before deletion")
 		if err := r.c.Reannounce(ft); err != nil {

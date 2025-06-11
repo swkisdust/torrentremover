@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	_ "time/tzdata"
 
 	"github.com/robfig/cron/v3"
 	"github.com/urfave/cli/v3"

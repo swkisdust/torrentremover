@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/goccy/go-yaml"
@@ -45,5 +46,17 @@ func (c *Config) Read(f string) error {
 		return err
 	}
 
-	return yaml.Unmarshal(b, c)
+	if err := yaml.Unmarshal(b, c); err != nil {
+		return err
+	}
+
+	for i, profile := range c.Profiles {
+		for j, st := range profile.Strategy {
+			if st.Name == "" {
+				return fmt.Errorf("profiles[%d].strategy[%d] needs a name", i, j)
+			}
+		}
+	}
+
+	return nil
 }

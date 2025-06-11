@@ -32,7 +32,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 	return &RemoveExpr{prog, client}, nil
 }
 
-func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFiles bool) error {
+func (r *RemoveExpr) Run(torrents []model.Torrent, name string, dryRun, reannounce, deleteFiles bool) error {
 	env := env{torrents, r.c.GetFreeSpaceOnDisk()}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
@@ -55,6 +55,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFil
 
 	for _, t := range ft {
 		slog.Info("found deletable torrent",
+			"strategy", name,
 			"hash", t.Hash,
 			"name", t.Name,
 			"size", t.Size,
@@ -67,12 +68,12 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFil
 	}
 
 	if dryRun {
-		slog.Debug("dry-run ended")
+		slog.Debug("dry-run ended", "strategy", name)
 		return nil
 	}
 
 	if len(ft) < 1 {
-		slog.Info("no matching torrents found")
+		slog.Info("no matching torrents found", "strategy", name)
 		return nil
 	}
 
@@ -90,6 +91,6 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFil
 		return fmt.Errorf("c.DeleteTorrents: %v", err)
 	}
 
-	slog.Info("torrents deleted", "deleteFiles", deleteFiles)
+	slog.Info("torrents deleted", "strategy", name, "deleteFiles", deleteFiles)
 	return nil
 }

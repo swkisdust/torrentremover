@@ -10,6 +10,7 @@ import (
 )
 
 type Strategy struct {
+	Name        string `json:"name"`
 	Filter      Filter `json:"filter"`
 	Reannounce  bool   `json:"reannounce,omitempty"`
 	DeleteFiles bool   `json:"delete_files,omitempty"`

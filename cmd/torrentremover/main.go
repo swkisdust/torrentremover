@@ -160,14 +160,14 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 		for _, st := range profile.Strategy {
 			expr, err := exprx.Compile(st.RemoveExpr, client)
 			if err != nil {
-				slog.Warn("failed to compile expr", "client_id", profile.Client, "error", err)
+				slog.Warn("failed to compile expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 				continue
 			}
 
 			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
-			slog.Debug("filtered torrents", "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, dryRun, st.Reannounce, st.DeleteFiles); err != nil {
-				slog.Warn("failed to execute expr", "client_id", profile.Client, "error", err)
+			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
+			if err := expr.Run(filteredTorrents, st.Name, dryRun, st.Reannounce, st.DeleteFiles); err != nil {
+				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}
 	}

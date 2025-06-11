@@ -16,6 +16,7 @@ import (
 
 	"github.com/swkisdust/torrentremover/internal/client"
 	"github.com/swkisdust/torrentremover/internal/client/qbitorrentx"
+	"github.com/swkisdust/torrentremover/internal/client/transmissionx"
 	"github.com/swkisdust/torrentremover/internal/exprx"
 	logx "github.com/swkisdust/torrentremover/internal/log"
 	"github.com/swkisdust/torrentremover/model"
@@ -124,6 +125,12 @@ func parseClients(c *model.Config) map[string]client.Client {
 		switch config.Type {
 		case "qbittorrent":
 			clientMap[name] = qbitorrentx.NewQbittorrent(config.Config)
+		case "transmission":
+			if client, err := transmissionx.NewTransmission(config.Config); err == nil {
+				clientMap[name] = client
+			} else {
+				slog.Warn("failed to create transmission client", "name", name, "config", config.Config)
+			}
 		default:
 			slog.Warn("unsupported client type", "client_name", name, "client_type", config.Type)
 		}
@@ -166,7 +173,7 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 
 			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, st.Name, dryRun, st.Reannounce, st.DeleteFiles); err != nil {
+			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath, dryRun, st.Reannounce, st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}

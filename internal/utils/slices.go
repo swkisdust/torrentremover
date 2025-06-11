@@ -1,13 +1,25 @@
 package utils
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
-func SlicesHaveSubstrings(s []string, substrings ...string) bool {
-	if len(s) == 0 {
+func SlicesHave[S ~[]E, E comparable](s S, es ...E) bool {
+	if len(s) < 1 || len(es) < 1 {
 		return false
 	}
 
-	if len(substrings) == 0 {
+	for _, e := range es {
+		if slices.Contains(s, e) {
+			return true
+		}
+	}
+	return false
+}
+
+func SlicesHaveSubstrings(s []string, substrings ...string) bool {
+	if len(s) < 1 || len(substrings) < 1 {
 		return false
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"slices"
 
+	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/swkisdust/torrentremover/internal/format"
 )
 
@@ -14,6 +15,7 @@ type Strategy struct {
 	Filter      Filter `json:"filter"`
 	Reannounce  bool   `json:"reannounce,omitempty"`
 	DeleteFiles bool   `json:"delete_files,omitempty"`
+	Mountpath   string `json:"mount_path"`
 	RemoveExpr  string `json:"remove"`
 }
 
@@ -88,6 +90,25 @@ func GetStatus(s string) Status {
 		return StatusStalled | StatusUploading
 	case "stalleddl":
 		return StatusStalled | StatusDownloading
+	default:
+		return 0
+	}
+}
+
+func TRStatusToQbStatus(status transmissionrpc.TorrentStatus) Status {
+	switch status {
+	case transmissionrpc.TorrentStatusStopped:
+		return StatusStopped
+	case transmissionrpc.TorrentStatusDownloadWait:
+		return StatusQueued | StatusDownloading
+	case transmissionrpc.TorrentStatusDownload:
+		return StatusDownloading
+	case transmissionrpc.TorrentStatusSeedWait:
+		return StatusQueued | StatusUploading
+	case transmissionrpc.TorrentStatusSeed:
+		return StatusUploading
+	case transmissionrpc.TorrentStatusIsolated:
+		return StatusStalled
 	default:
 		return 0
 	}

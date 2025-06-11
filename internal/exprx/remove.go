@@ -34,8 +34,8 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 	return &RemoveExpr{prog, client}, nil
 }
 
-func (r *RemoveExpr) Run(torrents []model.Torrent, name string, dryRun, reannounce, deleteFiles bool) error {
-	env := env{torrents, r.c.GetFreeSpaceOnDisk(), utils.ParseBytes}
+func (r *RemoveExpr) Run(torrents []model.Torrent, name, path string, dryRun, reannounce, deleteFiles bool) error {
+	env := env{torrents, r.c.GetFreeSpaceOnDisk(path), utils.ParseBytes}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err
@@ -66,6 +66,9 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, name string, dryRun, reannoun
 			"last_activity", t.LastActivity,
 			"time_elapsed", t.TimeElapsed,
 			"seeding_time", t.SeedingTime,
+			"category", t.Category,
+			"tags", t.Tags,
+			"trackers", t.Trackers,
 		)
 	}
 

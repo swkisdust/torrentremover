@@ -1,0 +1,4 @@
+.DS_Store
+/torrentremover*
+/cmd/torrentremover/torrentremover
+/*.yaml

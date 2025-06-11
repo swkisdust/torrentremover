@@ -1,0 +1,90 @@
+package exprx
+
+import (
+	"fmt"
+	"log/slog"
+	"reflect"
+	"time"
+
+	"github.com/expr-lang/expr"
+	"github.com/expr-lang/expr/vm"
+
+	"github.com/swkisdust/torrentremover/internal/client"
+	"github.com/swkisdust/torrentremover/model"
+)
+
+type RemoveExpr struct {
+	prog *vm.Program
+	c    client.Client
+}
+
+type env struct {
+	Torrents []model.Torrent `expr:"torrents"`
+	Disk     int64           `expr:"disk"`
+}
+
+func Compile(raw string, client client.Client) (*RemoveExpr, error) {
+	prog, err := expr.Compile(raw, expr.Env(env{}), expr.AsKind(reflect.Slice))
+	if err != nil {
+		return nil, err
+	}
+
+	return &RemoveExpr{prog, client}, nil
+}
+
+func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFiles bool) error {
+	env := env{torrents, r.c.GetFreeSpaceOnDisk()}
+	fti, err := expr.Run(r.prog, env)
+	if err != nil {
+		return err
+	}
+
+	rawFt, ok := fti.([]any)
+	if !ok {
+		return fmt.Errorf("expr returned an unexpected type: %T, expected []any", fti)
+	}
+
+	ft := make([]model.Torrent, 0, len(rawFt))
+	for _, item := range rawFt {
+		t, ok := item.(model.Torrent)
+		if !ok {
+			return fmt.Errorf("element in filtered list is not model.Torrent, got %T, value %v", item, item)
+		}
+		ft = append(ft, t)
+	}
+
+	for _, t := range ft {
+		slog.Info("found deletable torrent",
+			"hash", t.Hash,
+			"name", t.Name,
+			"size", t.Size,
+			"ratio", t.Ratio,
+			"added_time", t.AddedTime,
+			"last_activity", t.LastActivity,
+			"time_elapsed", t.TimeElapsed,
+			"seeding_time", t.SeedingTime,
+		)
+	}
+
+	if dryRun {
+		slog.Info("dry-run ended")
+		return nil
+	}
+
+	if reannounce {
+		slog.Info("reannouncing torrents before deletion")
+		if err := r.c.Reannounce(ft); err != nil {
+			return fmt.Errorf("c.Reannounce: %v", err)
+		}
+
+		// Waiting for reannounce (might not needed)
+		time.Sleep(time.Second * 1)
+	}
+
+	if err := r.c.DeleteTorrents(ft, deleteFiles); err != nil {
+		return fmt.Errorf("c.DeleteTorrents: %v", err)
+	}
+
+	slog.Info("torrents deleted", "deleteFiles", deleteFiles)
+	return nil
+}

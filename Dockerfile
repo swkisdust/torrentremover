@@ -15,8 +15,8 @@ WORKDIR /data
 COPY dist/torrentremover-${TARGETOS}-${TARGETARCH} ./torrentremover
 
 VOLUME ["/data/config.yaml"]
+ARG TZ=Asia/Shanghai
 ENV TZ=$TZ
-
 ENV DRY_RUN=false
 
 ENTRYPOINT ["/bin/sh", "-c", "\

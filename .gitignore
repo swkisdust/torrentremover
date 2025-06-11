@@ -2,3 +2,4 @@
 /torrentremover*
 /cmd/torrentremover/torrentremover
 /*.yaml
+/dist

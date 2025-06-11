@@ -24,6 +24,8 @@ type Torrent struct {
 	UpSpeed      int64         `json:"up_speed" expr:"up_speed"`
 	AvgDlSpeed   int64         `json:"avg_dl_speed" expr:"avg_dl_speed"`
 	AvgUpSpeed   int64         `json:"avg_up_speed" expr:"avg_up_speed"`
+	Downloaded   int64         `json:"downloaded" expr:"downloaded"`
+	Uploaded     int64         `json:"uploaded" expr:"uploaded"`
 	AddedTime    time.Time     `json:"added_time" expr:"added_time"`
 	LastActivity time.Time     `json:"last_activity" expr:"last_activity"`
 	SeedingTime  time.Duration `json:"seeding_time" expr:"seeding_time"`
@@ -56,6 +58,8 @@ func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) T
 		UpSpeed:      torrent.UpSpeed,
 		AvgDlSpeed:   int64(prop.DlSpeedAvg),
 		AvgUpSpeed:   int64(prop.UpSpeedAvg),
+		Downloaded:   torrent.Downloaded,
+		Uploaded:     torrent.Uploaded,
 		Trackers: slices.Collect(utils.IterMap(slices.Values(torrent.Trackers),
 			func(qt qbittorrent.TorrentTracker) string {
 				return qt.Url
@@ -77,7 +81,7 @@ func FilterTorrents(f Filter, torrents []Torrent) []Torrent {
 		if f.ExcludedStatus != nil && ContainStatus(f.ExcludedStatus, torrent.Status) {
 			return true
 		}
-		if torrent.Trackers != nil && utils.SlicesHaveSubstrings(torrent.Trackers, f.ExcludedTrackers...) {
+		if f.ExcludedTrackers != nil && torrent.Trackers != nil && utils.SlicesHaveSubstrings(torrent.Trackers, f.ExcludedTrackers...) {
 			return true
 		}
 		if f.Categories != nil && !slices.Contains(f.Categories, torrent.Category) {
@@ -89,7 +93,7 @@ func FilterTorrents(f Filter, torrents []Torrent) []Torrent {
 		if f.Status != nil && !ContainStatus(f.Status, torrent.Status) {
 			return true
 		}
-		if torrent.Trackers != nil && !utils.SlicesHaveSubstrings(torrent.Trackers, f.Trackers...) {
+		if f.Trackers != nil && torrent.Trackers != nil && !utils.SlicesHaveSubstrings(torrent.Trackers, f.Trackers...) {
 			return true
 		}
 		return false

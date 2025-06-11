@@ -27,7 +27,7 @@ func NewQbittorrent(config model.ClientConfig) *Qbitorrent {
 }
 
 func (qb *Qbitorrent) GetTorrents() ([]model.Torrent, error) {
-	torrents, err := qb.client.GetTorrents(qbittorrent.TorrentFilterOptions{})
+	torrents, err := qb.client.GetTorrents(qbittorrent.TorrentFilterOptions{IncludeTrackers: true})
 	if err != nil {
 		return nil, err
 	}
@@ -35,6 +35,9 @@ func (qb *Qbitorrent) GetTorrents() ([]model.Torrent, error) {
 	return slices.Collect(utils.IterMap(slices.Values(torrents),
 		func(qt qbittorrent.Torrent) model.Torrent {
 			prop, _ := qb.client.GetTorrentProperties(qt.Hash)
+			if len(qt.Trackers) == 0 {
+				qt.Trackers, _ = qb.client.GetTorrentTrackers(qt.Hash)
+			}
 			return model.FromQbit(qt, prop)
 		})), nil
 }

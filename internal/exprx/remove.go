@@ -67,7 +67,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, dryRun, reannounce, deleteFil
 	}
 
 	if dryRun {
-		slog.Info("dry-run ended")
+		slog.Debug("dry-run ended")
 		return nil
 	}
 

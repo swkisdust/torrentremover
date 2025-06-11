@@ -10,6 +10,7 @@ import (
 	"github.com/expr-lang/expr/vm"
 
 	"github.com/swkisdust/torrentremover/internal/client"
+	"github.com/swkisdust/torrentremover/internal/utils"
 	"github.com/swkisdust/torrentremover/model"
 )
 
@@ -19,8 +20,9 @@ type RemoveExpr struct {
 }
 
 type env struct {
-	Torrents []model.Torrent `expr:"torrents"`
-	Disk     int64           `expr:"disk"`
+	Torrents []model.Torrent               `expr:"torrents"`
+	Disk     int64                         `expr:"disk"`
+	Bytes    func(s string) (int64, error) `expr:"bytes"`
 }
 
 func Compile(raw string, client client.Client) (*RemoveExpr, error) {
@@ -33,7 +35,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 }
 
 func (r *RemoveExpr) Run(torrents []model.Torrent, name string, dryRun, reannounce, deleteFiles bool) error {
-	env := env{torrents, r.c.GetFreeSpaceOnDisk()}
+	env := env{torrents, r.c.GetFreeSpaceOnDisk(), utils.ParseBytes}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err
@@ -78,7 +80,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, name string, dryRun, reannoun
 	}
 
 	if reannounce {
-		slog.Info("reannouncing torrents before deletion")
+		slog.Info("reannouncing torrents before deletion", "strategy", name)
 		if err := r.c.Reannounce(ft); err != nil {
 			return fmt.Errorf("c.Reannounce: %v", err)
 		}

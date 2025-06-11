@@ -50,7 +50,7 @@ func (s Status) HasFlag(flag Status) bool {
 }
 
 func (s *Status) UnmarshalYAML(b []byte) error {
-	statusStr := string(b)
+	statusStr := strings.Trim(string(b), `"`)
 	code := GetStatus(statusStr)
 	if code == 0 && statusStr != "" {
 		return fmt.Errorf("invalid status string in YAML: %q", statusStr)

@@ -36,6 +36,7 @@ const (
 	StatusUploading
 	StatusError
 
+	StatusPaused  Status = 1 << 12
 	StatusQueued  Status = 1 << 13
 	StatusStalled Status = 1 << 14
 	StatusStopped Status = 1 << 15
@@ -62,12 +63,18 @@ func GetStatus(s string) Status {
 		return StatusUploading
 	case "downloading":
 		return StatusDownloading
+	case "paused":
+		return StatusPaused
+	case "queued":
+		return StatusQueued
+	case "stopped":
+		return StatusStopped
 	case "error":
 		return StatusError
-	case "stalledup":
-		return StatusStalled | StatusUploading
-	case "stalleddl":
-		return StatusStalled | StatusDownloading
+	case "pausedup":
+		return StatusPaused | StatusUploading
+	case "pauseddl":
+		return StatusPaused | StatusDownloading
 	case "queuedup":
 		return StatusQueued | StatusUploading
 	case "queueddl":
@@ -76,6 +83,10 @@ func GetStatus(s string) Status {
 		return StatusStopped | StatusUploading
 	case "stoppeddl":
 		return StatusStopped | StatusDownloading
+	case "stalledup":
+		return StatusStalled | StatusUploading
+	case "stalleddl":
+		return StatusStalled | StatusDownloading
 	default:
 		return 0
 	}

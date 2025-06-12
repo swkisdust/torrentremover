@@ -173,7 +173,7 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 
 			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath, dryRun, st.Reannounce, st.DeleteFiles); err != nil {
+			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath, dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}

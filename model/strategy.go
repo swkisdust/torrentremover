@@ -74,21 +74,21 @@ func GetStatus(s string) Status {
 		return StatusStopped
 	case "error":
 		return StatusError
-	case "pausedup":
+	case "pausedup", "pausedupload":
 		return StatusPaused | StatusUploading
-	case "pauseddl":
+	case "pauseddl", "pauseddownload":
 		return StatusPaused | StatusDownloading
-	case "queuedup":
+	case "queuedup", "queuedupload":
 		return StatusQueued | StatusUploading
-	case "queueddl":
+	case "queueddl", "queueddownload":
 		return StatusQueued | StatusDownloading
-	case "stoppedup":
+	case "stoppedup", "stoppedupload":
 		return StatusStopped | StatusUploading
-	case "stoppeddl":
+	case "stoppeddl", "stoppeddownload":
 		return StatusStopped | StatusDownloading
-	case "stalledup":
+	case "stalledup", "stalledupload":
 		return StatusStalled | StatusUploading
-	case "stalleddl":
+	case "stalleddl", "stalleddownload":
 		return StatusStalled | StatusDownloading
 	default:
 		return 0

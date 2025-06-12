@@ -22,10 +22,6 @@ import (
 	"github.com/swkisdust/torrentremover/model"
 )
 
-var (
-	Version string
-)
-
 func initConfig(path string) (*model.Config, error) {
 	var config model.Config
 	if err := config.Read(path); err != nil {
@@ -47,7 +43,7 @@ func loadDefaultConfigPath() string {
 func main() {
 	app := &cli.Command{
 		Usage:   "torrentremover",
-		Version: Version,
+		Version: model.Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "config", Aliases: []string{"c"}, Usage: "config path"},
 			&cli.BoolFlag{Name: "dry-run", Aliases: []string{"n"}, Usage: "dry run"},

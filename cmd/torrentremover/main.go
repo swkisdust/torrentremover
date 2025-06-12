@@ -78,13 +78,21 @@ func setupLogger(c model.LogConfig) {
 }
 
 func setupDaemon(c *model.Config, dryRun bool) error {
+	clientMap := parseClients(c)
+	if len(clientMap) == 0 {
+		return errors.New("you didn't configure any client")
+	}
+
+	if len(c.Profiles) == 0 {
+		return errors.New("you didn't configure any profile")
+	}
+
 	if !c.Daemon.Enabled {
 		slog.Info("running in oneshot mode")
-		return run(c, nil, dryRun)
+		return run(c, clientMap, dryRun)
 	}
 
 	slog.Info("running in daemon mode", "cronexp", c.Daemon.CronExp)
-	clientMap := parseClients(c)
 	cronLogger := logx.NewCronLogger(slog.Default())
 	cronScheduler := cron.New(cron.WithLogger(cronLogger), cron.WithChain(
 		cron.Recover(cronLogger),
@@ -136,18 +144,6 @@ func parseClients(c *model.Config) map[string]client.Client {
 }
 
 func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error {
-	if clientMap == nil {
-		clientMap = parseClients(c)
-	}
-
-	if len(clientMap) == 0 {
-		return errors.New("you didn't configure any client")
-	}
-
-	if len(c.Profiles) == 0 {
-		return errors.New("you didn't configure any profile")
-	}
-
 	for _, profile := range c.Profiles {
 		client, ok := clientMap[profile.Client]
 		if !ok {

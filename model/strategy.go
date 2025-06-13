@@ -38,6 +38,7 @@ const (
 	StatusDownloading Status = 1 << iota
 	StatusUploading
 	StatusError
+	StatusChecking
 
 	StatusPaused  Status = 1 << 12
 	StatusQueued  Status = 1 << 13
@@ -62,7 +63,7 @@ func (s *Status) UnmarshalYAML(b []byte) error {
 
 func GetStatus(s string) Status {
 	switch strings.ToLower(s) {
-	case "uploading":
+	case "uploading", "seeding":
 		return StatusUploading
 	case "downloading":
 		return StatusDownloading
@@ -74,6 +75,9 @@ func GetStatus(s string) Status {
 		return StatusStopped
 	case "error":
 		return StatusError
+	case "checking":
+		return StatusChecking
+	// qbittorrent status
 	case "pausedup", "pausedupload":
 		return StatusPaused | StatusUploading
 	case "pauseddl", "pauseddownload":
@@ -90,6 +94,10 @@ func GetStatus(s string) Status {
 		return StatusStalled | StatusUploading
 	case "stalleddl", "stalleddownload":
 		return StatusStalled | StatusDownloading
+	case "checkingup", "checkingupload":
+		return StatusChecking | StatusUploading
+	case "checkingdl", "checkingdownload":
+		return StatusChecking | StatusDownloading
 	default:
 		return 0
 	}
@@ -109,6 +117,10 @@ func TRStatusToQbStatus(status transmissionrpc.TorrentStatus) Status {
 		return StatusUploading
 	case transmissionrpc.TorrentStatusIsolated:
 		return StatusStalled
+	case transmissionrpc.TorrentStatusCheck:
+		return StatusChecking
+	case transmissionrpc.TorrentStatusCheckWait:
+		return StatusQueued | StatusChecking
 	default:
 		return 0
 	}

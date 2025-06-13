@@ -15,6 +15,7 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/swkisdust/torrentremover/internal/client"
+	"github.com/swkisdust/torrentremover/internal/client/delugex"
 	"github.com/swkisdust/torrentremover/internal/client/qbitorrentx"
 	"github.com/swkisdust/torrentremover/internal/client/transmissionx"
 	"github.com/swkisdust/torrentremover/internal/exprx"
@@ -134,6 +135,12 @@ func parseClients(c *model.Config) map[string]client.Client {
 				clientMap[name] = client
 			} else {
 				slog.Warn("failed to create transmission client", "name", name, "config", config.Config)
+			}
+		case "deluge":
+			if client, err := delugex.NewDeluge(config.Config); err == nil {
+				clientMap[name] = client
+			} else {
+				slog.Warn("failed to create deluge client", "name", name, "config", config.Config)
 			}
 		default:
 			slog.Warn("unsupported client type", "client_name", name, "client_type", config.Type)

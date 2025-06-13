@@ -20,6 +20,7 @@ func (a *Array[E]) UnmarshalYAML(b []byte) error {
 		return nil
 	}
 
+	// unmarshaling to any to further investigate the problem
 	var raw any
 	if err := yaml.Unmarshal(b, &raw); err != nil {
 		return fmt.Errorf("cannot unmarshal array: %w", err)

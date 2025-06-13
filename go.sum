@@ -1,5 +1,7 @@
 github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
+github.com/autobrr/go-deluge v1.3.1-0.20250503123942-245951c90584 h1:SJ2viG5wsZP7xuzh23/Pu0OTuFnr1xO/N9qnq6noz1Q=
+github.com/autobrr/go-deluge v1.3.1-0.20250503123942-245951c90584/go.mod h1:ndiXT1eHWv/ATNk9TpE8GHIs8OSSUnsImt4Syk+y5LM=
 github.com/autobrr/go-qbittorrent v1.14.0 h1:H+/HWDmNUSwkWCTwgK8+f7vzIdXCJLWj6MZlGs8+WZE=
 github.com/autobrr/go-qbittorrent v1.14.0/go.mod h1:N+sISEJr1hM+AQiTD7pnsilgBcfGzIQsjwoEjWWvnng=
 github.com/avast/retry-go v3.0.0+incompatible h1:4SOWQ7Qs+oroOTQOYnAHqelpCO0biHSxpiH9JdtuBj0=
@@ -8,6 +10,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/expr-lang/expr v1.17.5 h1:i1WrMvcdLF249nSNlpQZN1S6NXuW9WaOfF5tPi3aw3k=
 github.com/expr-lang/expr v1.17.5/go.mod h1:8/vRC7+7HBzESEqt5kKpYXxrxkr31SaO8r40VO/1IT4=
+github.com/gdm85/go-rencode v0.1.8 h1:7+qxwoQWU1b1nMGcESOyoUR5dzPtRA6yLQpKn7uXmnI=
+github.com/gdm85/go-rencode v0.1.8/go.mod h1:0dr3BuaKzeseY1of6o1KRTGB/Oo7eio+YEyz8KDp5+s=
 github.com/goccy/go-yaml v1.18.0 h1:8W7wMFS12Pcas7KU+VVkaiCng+kG8QiFeFwzFb+rwuw=
 github.com/goccy/go-yaml v1.18.0/go.mod h1:XBurs7gK8ATbW4ZPGKgcbrY1Br56PdM69F7LkFRi1kA=
 github.com/hashicorp/go-cleanhttp v0.5.2 h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=

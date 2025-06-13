@@ -46,7 +46,7 @@ func (tr *Transmission) DeleteTorrents(torrents []model.Torrent, deleteFiles boo
 	return tr.client.TorrentRemove(context.Background(), transmissionrpc.TorrentRemovePayload{
 		IDs: slices.Collect(utils.IterMap(slices.Values(torrents),
 			func(t model.Torrent) int64 {
-				return t.ID
+				return t.ID.(int64)
 			})),
 		DeleteLocalData: deleteFiles,
 	})

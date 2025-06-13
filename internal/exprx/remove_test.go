@@ -83,7 +83,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", "/", false, true, true); err != nil {
+		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})
@@ -97,7 +97,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", "/", false, true, true); err != nil {
+		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})
@@ -111,7 +111,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", "/", false, true, true); err != nil {
+		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})

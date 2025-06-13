@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 	_ "time/tzdata"
 
 	"github.com/robfig/cron/v3"
@@ -20,6 +21,7 @@ import (
 	"github.com/swkisdust/torrentremover/internal/client/transmissionx"
 	"github.com/swkisdust/torrentremover/internal/exprx"
 	logx "github.com/swkisdust/torrentremover/internal/log"
+	"github.com/swkisdust/torrentremover/internal/utils"
 	"github.com/swkisdust/torrentremover/model"
 )
 
@@ -172,7 +174,9 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 
 			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath, dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
+			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath,
+				utils.IfOr(st.AnnounceInterval != 0, time.Duration(st.AnnounceInterval)*time.Second, time.Duration(profile.AnnounceInterval)*time.Second),
+				dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}

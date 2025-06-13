@@ -11,12 +11,13 @@ import (
 )
 
 type Strategy struct {
-	Name        string `json:"name"`
-	Filter      Filter `json:"filter"`
-	Reannounce  bool   `json:"reannounce,omitempty"`
-	DeleteFiles bool   `json:"delete_files,omitempty"`
-	Mountpath   string `json:"mount_path"`
-	RemoveExpr  string `json:"remove"`
+	Name             string `json:"name"`
+	Filter           Filter `json:"filter"`
+	Reannounce       bool   `json:"reannounce,omitempty"`
+	DeleteFiles      bool   `json:"delete_files,omitempty"`
+	AnnounceInterval uint32 `json:"announce_interval,omitempty"`
+	Mountpath        string `json:"mount_path,omitempty"`
+	RemoveExpr       string `json:"remove"`
 }
 
 type Filter struct {

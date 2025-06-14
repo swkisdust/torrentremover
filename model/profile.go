@@ -1,9 +1,9 @@
 package model
 
 type Profile struct {
-	Client           string     `json:"client"`
-	Strategy         []Strategy `json:"strategy"`
-	Reannounce       bool       `json:"reannounce,omitempty"`
-	DeleteFiles      bool       `json:"delete_files,omitempty"`
-	AnnounceInterval uint32     `json:"announce_interval,omitempty"`
+	Client      string     `json:"client"`
+	Strategy    []Strategy `json:"strategy"`
+	Reannounce  bool       `json:"reannounce,omitempty"`
+	DeleteFiles bool       `json:"delete_files,omitempty"`
+	DeleteDelay uint32     `json:"delete_delay,omitempty"`
 }

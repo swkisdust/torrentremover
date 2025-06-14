@@ -50,7 +50,7 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 		ID:           *torrent.ID,
 		Hash:         *torrent.HashString,
 		Name:         *torrent.Name,
-		Status:       TRStatusToQbStatus(*torrent.Status),
+		Status:       FromTrStatus(*torrent.Status),
 		Ratio:        *torrent.UploadRatio,
 		Progress:     *torrent.PercentDone,
 		Tags:         torrent.Labels,

@@ -11,13 +11,13 @@ import (
 )
 
 type Strategy struct {
-	Name             string `json:"name"`
-	Filter           Filter `json:"filter"`
-	Reannounce       bool   `json:"reannounce,omitempty"`
-	DeleteFiles      bool   `json:"delete_files,omitempty"`
-	AnnounceInterval uint32 `json:"announce_interval,omitempty"`
-	Mountpath        string `json:"mount_path,omitempty"`
-	RemoveExpr       string `json:"remove"`
+	Name        string `json:"name"`
+	Filter      Filter `json:"filter"`
+	Reannounce  bool   `json:"reannounce,omitempty"`
+	DeleteFiles bool   `json:"delete_files,omitempty"`
+	DeleteDelay uint32 `json:"delete_delay,omitempty"`
+	Mountpath   string `json:"mount_path,omitempty"`
+	RemoveExpr  string `json:"remove"`
 }
 
 type Filter struct {
@@ -104,7 +104,7 @@ func GetStatus(s string) Status {
 	}
 }
 
-func TRStatusToQbStatus(status transmissionrpc.TorrentStatus) Status {
+func FromTrStatus(status transmissionrpc.TorrentStatus) Status {
 	switch status {
 	case transmissionrpc.TorrentStatusStopped:
 		return StatusStopped

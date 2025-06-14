@@ -36,8 +36,8 @@ type LogConfig struct {
 }
 
 type DaemonConfig struct {
-	Enabled bool   `json:"enabled"`
-	CronExp string `json:"cron_exp"`
+	Disabled bool   `json:"disabled"`
+	CronExp  string `json:"cron_exp"`
 }
 
 func (c *Config) Read(f string) error {

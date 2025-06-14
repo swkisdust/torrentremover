@@ -90,7 +90,7 @@ func setupDaemon(c *model.Config, dryRun bool) error {
 		return errors.New("you didn't configure any profile")
 	}
 
-	if !c.Daemon.Enabled {
+	if c.Daemon.Disabled {
 		slog.Info("running in oneshot mode")
 		return run(c, clientMap, dryRun)
 	}
@@ -175,7 +175,7 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
 			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath,
-				utils.IfOr(st.AnnounceInterval != 0, time.Duration(st.AnnounceInterval)*time.Second, time.Duration(profile.AnnounceInterval)*time.Second),
+				utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
 				dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}

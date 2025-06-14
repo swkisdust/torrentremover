@@ -138,7 +138,7 @@ func parseClients(c *model.Config) map[string]client.Client {
 			} else {
 				slog.Warn("failed to create transmission client", "name", name, "config", config.Config)
 			}
-		case "deluge":
+		case "deluge", "deluge_v2":
 			if client, err := delugex.NewDeluge(config.Config); err == nil {
 				clientMap[name] = client
 			} else {

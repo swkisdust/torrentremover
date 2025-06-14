@@ -39,6 +39,10 @@ func NewDeluge(config model.ClientConfig) (*Deluge, error) {
 	}
 
 	clientV2 := deluge.NewV2(settings)
+	if err := clientV2.Connect(context.Background()); err != nil {
+		return nil, err
+	}
+
 	return &Deluge{clientV2}, nil
 }
 

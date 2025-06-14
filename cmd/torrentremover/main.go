@@ -136,13 +136,13 @@ func parseClients(c *model.Config) map[string]client.Client {
 			if client, err := transmissionx.NewTransmission(config.Config); err == nil {
 				clientMap[name] = client
 			} else {
-				slog.Warn("failed to create transmission client", "name", name, "config", config.Config)
+				slog.Warn("failed to create transmission client", "name", name, "config", config.Config, "error", err)
 			}
 		case "deluge", "deluge_v2":
 			if client, err := delugex.NewDeluge(config.Config); err == nil {
 				clientMap[name] = client
 			} else {
-				slog.Warn("failed to create deluge client", "name", name, "config", config.Config)
+				slog.Warn("failed to create deluge client", "name", name, "config", config.Config, "error", err)
 			}
 		default:
 			slog.Warn("unsupported client type", "client_name", name, "client_type", config.Type)

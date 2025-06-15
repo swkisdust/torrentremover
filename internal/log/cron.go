@@ -17,7 +17,7 @@ type cronLogger struct {
 
 func (l *cronLogger) Info(msg string, keysAndValues ...any) {
 	keysAndValues = formatTimes(keysAndValues)
-	l.logger.Info(
+	l.logger.Debug(
 		fmt.Sprintf(formatString(len(keysAndValues)),
 			append([]any{msg}, keysAndValues...)...))
 }

@@ -78,7 +78,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, name, path string, raInt time
 	}
 
 	if len(ft) < 1 {
-		slog.Info("no matching torrents found", "strategy", name)
+		slog.Debug("no matching torrents found", "strategy", name)
 		return nil
 	}
 

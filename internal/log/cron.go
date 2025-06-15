@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -13,40 +12,18 @@ type cronLogger struct {
 	logger *slog.Logger
 }
 
-// from github.com/robfig/cron/v3
-
 func (l *cronLogger) Info(msg string, keysAndValues ...any) {
 	keysAndValues = formatTimes(keysAndValues)
-	l.logger.Debug(
-		fmt.Sprintf(formatString(len(keysAndValues)),
-			append([]any{msg}, keysAndValues...)...))
+	l.logger.Debug(fmt.Sprintf("cron: %s", msg), keysAndValues...)
 }
 
 func (l *cronLogger) Error(err error, msg string, keysAndValues ...any) {
 	keysAndValues = formatTimes(keysAndValues)
-	l.logger.Error(
-		fmt.Sprintf(formatString(len(keysAndValues)+2),
-			append([]any{msg, "error", err}, keysAndValues...)...))
-}
-
-// formatString returns a logfmt-like format string for the number of
-// key/values.
-func formatString(numKeysAndValues int) string {
-	var sb strings.Builder
-	sb.WriteString("%s")
-	if numKeysAndValues > 0 {
-		sb.WriteString(", ")
-	}
-	for i := range numKeysAndValues / 2 {
-		if i > 0 {
-			sb.WriteString(", ")
-		}
-		sb.WriteString("%v=%v")
-	}
-	return sb.String()
+	l.logger.Error(fmt.Sprintf("cron: %s", msg), keysAndValues...)
 }
 
 // formatTimes formats any time.Time values as RFC3339.
+// from github.com/robfig/cron/v3
 func formatTimes(keysAndValues []any) []any {
 	var formattedArgs []any
 	for _, arg := range keysAndValues {

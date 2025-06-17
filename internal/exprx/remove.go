@@ -89,7 +89,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, name, path string, raInt time
 		}
 
 		// Waiting for reannounce (might not needed)
-		time.Sleep(utils.IfOr(raInt != 0, raInt, time.Second*5))
+		time.Sleep(utils.IfOr(raInt != 0, raInt, time.Second*10))
 	}
 
 	if err := r.c.DeleteTorrents(ft, deleteFiles); err != nil {

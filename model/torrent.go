@@ -37,7 +37,11 @@ func (t Torrent) String() string {
 	return t.Hash
 }
 
-func FilterTorrents(f Filter, torrents []Torrent) []Torrent {
+func FilterTorrents(f Filter, freeSpace Bytes, torrents []Torrent) []Torrent {
+	if f.Disk != 0 && freeSpace > f.Disk {
+		return nil
+	}
+
 	dup := make([]Torrent, len(torrents))
 	copy(dup, torrents)
 

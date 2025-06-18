@@ -69,7 +69,7 @@ func (c *mockClient) Reannounce(torrents []model.Torrent) error {
 	return nil
 }
 
-func (c *mockClient) GetFreeSpaceOnDisk(path string) int64 {
+func (c *mockClient) GetFreeSpaceOnDisk(path string) model.Bytes {
 	return 2 * 1024 * 1024 * 1024
 }
 
@@ -83,7 +83,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
+		if err := expr.Run(testCases, "testSt", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})
@@ -97,21 +97,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
-			t.Errorf("failed to execute expr: %v", err)
-		}
-	})
-
-	t.Run("DiskExpr", func(t *testing.T) {
-		const exprStr = `filter(torrents, .size > 10240000 && .seeding_time > duration("1h") && disk < bytes("10M"))`
-		client := &mockClient{t, nil}
-
-		expr, err := Compile(exprStr, client)
-		if err != nil {
-			t.Errorf("failed to compile expr: %v", err)
-		}
-
-		if err := expr.Run(testCases, "testSt", "/", 0, false, true, true); err != nil {
+		if err := expr.Run(testCases, "testSt", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})

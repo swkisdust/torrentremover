@@ -59,10 +59,10 @@ func (tr *Transmission) Reannounce(torrents []model.Torrent) error {
 		})))
 }
 
-func (tr *Transmission) GetFreeSpaceOnDisk(path string) int64 {
+func (tr *Transmission) GetFreeSpaceOnDisk(path string) model.Bytes {
 	free, _, err := tr.client.FreeSpace(context.Background(), path)
 	if err != nil {
 		return -1
 	}
-	return int64(free.Byte())
+	return model.Bytes(free.Byte())
 }

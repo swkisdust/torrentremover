@@ -45,7 +45,7 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 	return Torrent{
 		AddedTime:    *torrent.AddedDate,
 		LastActivity: utils.IfOr(torrent.ActivityDate.Unix() == 0, time.Time{}, *torrent.ActivityDate),
-		TimeElapsed:  time.Now().Sub(*torrent.AddedDate),
+		TimeElapsed:  time.Since(*torrent.AddedDate),
 		SeedingTime:  *torrent.TimeSeeding,
 		ID:           *torrent.ID,
 		Hash:         *torrent.HashString,
@@ -80,7 +80,7 @@ func FromDeluge(id string, ts *deluge.TorrentStatus) Torrent {
 	return Torrent{
 		AddedTime:    addedTime,
 		LastActivity: utils.IfOr(ts.LastSeenComplete == 0, time.Time{}, time.Unix(ts.LastSeenComplete, 0)),
-		TimeElapsed:  time.Now().Sub(addedTime),
+		TimeElapsed:  time.Since(addedTime),
 		SeedingTime:  time.Duration(ts.SeedingTime) * time.Second,
 		ID:           id,
 		Hash:         ts.Hash,

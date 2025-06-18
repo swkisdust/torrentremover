@@ -115,6 +115,18 @@ func TestFilterTorrents(t *testing.T) {
 			expected: []Torrent{testTorrents[0]},
 		},
 		{
+			name:     "Disk filter: Has more remaining space",
+			filter:   Filter{Disk: 1024},
+			input:    testTorrents,
+			expected: nil,
+		},
+		{
+			name:     "Disk filter: Has less remaining space",
+			filter:   Filter{Disk: 4096},
+			input:    testTorrents,
+			expected: testTorrents,
+		},
+		{
 			name:     "Empty input torrents",
 			filter:   Filter{Categories: []string{"Movies"}},
 			input:    []Torrent{},
@@ -130,7 +142,7 @@ func TestFilterTorrents(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FilterTorrents(tt.filter, tt.input)
+			got := FilterTorrents(tt.filter, 2048, tt.input)
 
 			sortTorrents(got)
 			sortTorrents(tt.expected)

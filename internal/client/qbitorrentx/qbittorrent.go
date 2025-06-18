@@ -56,10 +56,10 @@ func (qb *Qbitorrent) Reannounce(torrents []model.Torrent) error {
 		})))
 }
 
-func (qb *Qbitorrent) GetFreeSpaceOnDisk(path string) int64 {
+func (qb *Qbitorrent) GetFreeSpaceOnDisk(path string) model.Bytes {
 	val, err := qb.client.GetFreeSpaceOnDisk()
 	if err != nil {
 		return -1
 	}
-	return val
+	return model.Bytes(val)
 }

@@ -74,10 +74,10 @@ func (d *Deluge) Reannounce(torrents []model.Torrent) error {
 		})))
 }
 
-func (d *Deluge) GetFreeSpaceOnDisk(path string) int64 {
+func (d *Deluge) GetFreeSpaceOnDisk(path string) model.Bytes {
 	size, err := d.client.GetFreeSpace(context.Background(), path)
 	if err != nil {
 		return -1
 	}
-	return size
+	return model.Bytes(size)
 }

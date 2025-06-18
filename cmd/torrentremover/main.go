@@ -172,9 +172,10 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 				continue
 			}
 
-			filteredTorrents := model.FilterTorrents(st.Filter, torrents)
+			filteredTorrents := model.FilterTorrents(st.Filter,
+				client.GetFreeSpaceOnDisk(utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath)), torrents)
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, st.Name, st.Mountpath,
+			if err := expr.Run(filteredTorrents, st.Name,
 				utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
 				dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)

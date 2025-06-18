@@ -8,6 +8,7 @@ import (
 
 	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/swkisdust/torrentremover/internal/format"
+	"github.com/swkisdust/torrentremover/internal/utils"
 )
 
 type Strategy struct {
@@ -30,6 +31,8 @@ type Filter struct {
 	ExcludedTags       format.Array[string] `json:"excluded_tags,omitempty"`
 	ExcludedTrackers   format.Array[string] `json:"excluded_trackers,omitempty"`
 	ExcludedStatus     format.Array[Status] `json:"excluded_status,omitempty"`
+
+	Disk Bytes `json:"disk,omitempty"`
 }
 
 // Torrent status
@@ -133,4 +136,17 @@ func ContainStatus(s []Status, v Status) bool {
 	}
 
 	return slices.ContainsFunc(s, v.HasFlag)
+}
+
+type Bytes int64
+
+func (b *Bytes) UnmarshalYAML(buf []byte) error {
+	bytesStr := strings.Trim(string(buf), `"`)
+	bytes, err := utils.ParseBytes(bytesStr)
+	if err != nil {
+		return err
+	}
+
+	*b = Bytes(bytes)
+	return nil
 }

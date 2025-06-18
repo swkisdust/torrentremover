@@ -21,7 +21,6 @@ type RemoveExpr struct {
 
 type env struct {
 	Torrents []model.Torrent               `expr:"torrents"`
-	Disk     int64                         `expr:"disk"`
 	Bytes    func(s string) (int64, error) `expr:"bytes"`
 }
 
@@ -34,8 +33,8 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 	return &RemoveExpr{prog, client}, nil
 }
 
-func (r *RemoveExpr) Run(torrents []model.Torrent, name, path string, raInt time.Duration, dryRun, reannounce, deleteFiles bool) error {
-	env := env{torrents, r.c.GetFreeSpaceOnDisk(path), utils.ParseBytes}
+func (r *RemoveExpr) Run(torrents []model.Torrent, name string, raInt time.Duration, dryRun, reannounce, deleteFiles bool) error {
+	env := env{torrents, utils.ParseBytes}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err

@@ -6,4 +6,5 @@ type Profile struct {
 	Reannounce  bool       `json:"reannounce,omitempty"`
 	DeleteFiles bool       `json:"delete_files,omitempty"`
 	DeleteDelay uint32     `json:"delete_delay,omitempty"`
+	Mountpath   string     `json:"mount_path,omitempty"`
 }

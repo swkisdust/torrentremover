@@ -1,6 +1,7 @@
 package exprx
 
 import (
+	"cmp"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -22,6 +23,8 @@ type RemoveExpr struct {
 type env struct {
 	Torrents []model.Torrent               `expr:"torrents"`
 	Bytes    func(s string) (int64, error) `expr:"bytes"`
+	Cmp      func(a, b int64) int          `expr:"cmp"`
+	CmpFloat func(a, b float64) int        `expr:"cmpFloat"`
 }
 
 func Compile(raw string, client client.Client) (*RemoveExpr, error) {
@@ -34,7 +37,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 }
 
 func (r *RemoveExpr) Run(torrents []model.Torrent, name string, raInt time.Duration, dryRun, reannounce, deleteFiles bool) error {
-	env := env{torrents, utils.ParseBytes}
+	env := env{torrents, utils.ParseBytes, cmp.Compare[int64], cmp.Compare[float64]}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err

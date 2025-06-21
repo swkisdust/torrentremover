@@ -174,6 +174,10 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 
 			filteredTorrents := model.FilterTorrents(st.Filter,
 				client.GetFreeSpaceOnDisk(utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath)), torrents)
+			if len(filteredTorrents) < 1 {
+				slog.Debug("no matching torrents found", "strategy", st.Name)
+				continue
+			}
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
 			if err := expr.Run(filteredTorrents, st.Name,
 				utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),

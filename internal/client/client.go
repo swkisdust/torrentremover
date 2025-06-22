@@ -1,10 +1,14 @@
 package client
 
-import "github.com/swkisdust/torrentremover/model"
+import (
+	"context"
+	"time"
+
+	"github.com/swkisdust/torrentremover/model"
+)
 
 type Client interface {
-	GetTorrents() ([]model.Torrent, error)
-	DeleteTorrents(torrents []model.Torrent, deleteFiles bool) error
-	Reannounce(torrents []model.Torrent) error
-	GetFreeSpaceOnDisk(path string) model.Bytes
+	GetTorrents(ctx context.Context) ([]model.Torrent, error)
+	DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error
+	GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes
 }

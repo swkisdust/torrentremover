@@ -6,6 +6,7 @@ require (
 	github.com/autobrr/go-deluge v1.3.1-0.20250503123942-245951c90584
 	github.com/autobrr/go-qbittorrent v1.14.0
 	github.com/expr-lang/expr v1.17.5
+	github.com/go-viper/mapstructure/v2 v2.3.0
 	github.com/goccy/go-yaml v1.18.0
 	github.com/hekmon/transmissionrpc/v3 v3.0.0
 	github.com/lmittmann/tint v1.1.2

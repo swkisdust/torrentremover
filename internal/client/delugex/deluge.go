@@ -3,6 +3,7 @@ package delugex
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"maps"
 	"net"
 	"slices"
@@ -10,17 +11,37 @@ import (
 	"time"
 
 	"github.com/autobrr/go-deluge"
+	"github.com/go-viper/mapstructure/v2"
 
 	"github.com/swkisdust/torrentremover/internal/utils"
 	"github.com/swkisdust/torrentremover/model"
 )
 
 type Deluge struct {
+	Host     string `mapstructure:"host"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	V2       bool   `mapstructure:"v2"`
+
 	client deluge.DelugeClient
 }
 
-func NewDeluge(config model.ClientConfig) (*Deluge, error) {
-	host, port, err := net.SplitHostPort(config.Host)
+func NewDeluge(ctx context.Context, config map[string]any) (*Deluge, error) {
+	var d Deluge
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		WeaklyTypedInput:     true,
+		IgnoreUntaggedFields: true,
+		Result:               &d,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := decoder.Decode(config); err != nil {
+		return nil, err
+	}
+
+	host, port, err := net.SplitHostPort(d.Host)
 	if err != nil {
 		return nil, fmt.Errorf("net.SplitHostPort: %v", err)
 	}
@@ -33,21 +54,27 @@ func NewDeluge(config model.ClientConfig) (*Deluge, error) {
 	settings := deluge.Settings{
 		Hostname:         host,
 		Port:             uint(portInt),
-		Login:            config.Username,
-		Password:         config.Password,
+		Login:            d.Username,
+		Password:         d.Password,
 		ReadWriteTimeout: time.Second * 5,
 	}
 
-	clientV2 := deluge.NewV2(settings)
-	if err := clientV2.Connect(context.Background()); err != nil {
+	var client deluge.DelugeClient
+	if !d.V2 {
+		client = deluge.NewV1(settings)
+	} else {
+		client = deluge.NewV2(settings)
+	}
+
+	if err := client.Connect(ctx); err != nil {
 		return nil, err
 	}
 
-	return &Deluge{clientV2}, nil
+	return &d, nil
 }
 
-func (d *Deluge) GetTorrents() ([]model.Torrent, error) {
-	torrents, err := d.client.TorrentsStatus(context.Background(), "", nil)
+func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+	torrents, err := d.client.TorrentsStatus(ctx, "", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -58,24 +85,43 @@ func (d *Deluge) GetTorrents() ([]model.Torrent, error) {
 		})), nil
 }
 
-func (d *Deluge) DeleteTorrents(torrents []model.Torrent, deleteFiles bool) error {
-	_, err := d.client.RemoveTorrents(context.Background(),
-		slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
-			return t.ID.(string)
-		})), deleteFiles)
+func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+		return t.Hash
+	}))
 
+	slog.Debug("pausing torrents", "strategy", name)
+	if err := d.client.PauseTorrents(ctx, hashes...); err != nil {
+		return err
+	}
+
+	// Waiting to pause torrents
+	time.Sleep(time.Second * 2)
+
+	slog.Debug("resuming torrents", "strategy", name)
+	if err := d.client.ResumeTorrents(ctx, hashes...); err != nil {
+		return err
+	}
+
+	// Waiting to resume torrents
+	time.Sleep(time.Second * 2)
+
+	if reannounce {
+		slog.Debug("reannouncing torrents", "strategy", name)
+		if err := d.client.ForceReannounce(ctx, hashes); err != nil {
+			return err
+		}
+
+		// Waiting for reannounce (might not needed)
+		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*10))
+	}
+
+	_, err := d.client.RemoveTorrents(ctx, hashes, deleteFiles)
 	return err
 }
 
-func (d *Deluge) Reannounce(torrents []model.Torrent) error {
-	return d.client.ForceReannounce(context.Background(),
-		slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
-			return t.ID.(string)
-		})))
-}
-
-func (d *Deluge) GetFreeSpaceOnDisk(path string) model.Bytes {
-	size, err := d.client.GetFreeSpace(context.Background(), path)
+func (d *Deluge) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
+	size, err := d.client.GetFreeSpace(ctx, path)
 	if err != nil {
 		return -1
 	}

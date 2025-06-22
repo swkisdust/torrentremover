@@ -65,7 +65,7 @@ func main() {
 			}
 			dryRun := c.Bool("dry-run")
 			setupLogger(config.Log)
-			return setupDaemon(config, dryRun)
+			return setupDaemon(ctx, config, dryRun)
 		},
 	}
 
@@ -80,8 +80,8 @@ func setupLogger(c model.LogConfig) {
 	slog.SetDefault(logger)
 }
 
-func setupDaemon(c *model.Config, dryRun bool) error {
-	clientMap := parseClients(c)
+func setupDaemon(ctx context.Context, c *model.Config, dryRun bool) error {
+	clientMap := parseClients(ctx, c)
 	if len(clientMap) == 0 {
 		return errors.New("you didn't configure any client")
 	}
@@ -92,7 +92,7 @@ func setupDaemon(c *model.Config, dryRun bool) error {
 
 	if c.Daemon.Disabled {
 		slog.Info("running in oneshot mode")
-		return run(c, clientMap, dryRun)
+		return run(ctx, c, clientMap, dryRun)
 	}
 
 	slog.Info("running in daemon mode", "cronexp", c.Daemon.CronExp)
@@ -103,7 +103,7 @@ func setupDaemon(c *model.Config, dryRun bool) error {
 	))
 
 	_, err := cronScheduler.AddFunc(c.Daemon.CronExp, func() {
-		if err := run(c, clientMap, dryRun); err != nil {
+		if err := run(ctx, c, clientMap, dryRun); err != nil {
 			slog.Error("run() error", "error", err)
 		}
 	})
@@ -125,13 +125,17 @@ func setupDaemon(c *model.Config, dryRun bool) error {
 	return nil
 }
 
-func parseClients(c *model.Config) map[string]client.Client {
+func parseClients(ctx context.Context, c *model.Config) map[string]client.Client {
 	clientMap := make(map[string]client.Client)
 
 	for name, config := range c.Clients {
 		switch config.Type {
 		case "qbittorrent":
-			clientMap[name] = qbitorrentx.NewQbittorrent(config.Config)
+			if client, err := qbitorrentx.NewQbittorrent(config.Config); err == nil {
+				clientMap[name] = client
+			} else {
+				slog.Warn("failed to create qbittorrent client", "name", name, "config", config.Config, "error", err)
+			}
 		case "transmission":
 			if client, err := transmissionx.NewTransmission(config.Config); err == nil {
 				clientMap[name] = client
@@ -139,7 +143,7 @@ func parseClients(c *model.Config) map[string]client.Client {
 				slog.Warn("failed to create transmission client", "name", name, "config", config.Config, "error", err)
 			}
 		case "deluge", "deluge_v2":
-			if client, err := delugex.NewDeluge(config.Config); err == nil {
+			if client, err := delugex.NewDeluge(ctx, config.Config); err == nil {
 				clientMap[name] = client
 			} else {
 				slog.Warn("failed to create deluge client", "name", name, "config", config.Config, "error", err)
@@ -152,7 +156,7 @@ func parseClients(c *model.Config) map[string]client.Client {
 	return clientMap
 }
 
-func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error {
+func run(ctx context.Context, c *model.Config, clientMap map[string]client.Client, dryRun bool) error {
 	for _, profile := range c.Profiles {
 		client, ok := clientMap[profile.Client]
 		if !ok {
@@ -160,7 +164,7 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 			continue
 		}
 
-		torrents, err := client.GetTorrents()
+		torrents, err := client.GetTorrents(ctx)
 		if err != nil {
 			slog.Warn("failed to get torrent list", "error", err)
 		}
@@ -173,13 +177,13 @@ func run(c *model.Config, clientMap map[string]client.Client, dryRun bool) error
 			}
 
 			filteredTorrents := model.FilterTorrents(st.Filter,
-				client.GetFreeSpaceOnDisk(utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath)), torrents)
+				client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath)), torrents)
 			if len(filteredTorrents) < 1 {
 				slog.Debug("no matching torrents found", "strategy", st.Name)
 				continue
 			}
 			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(filteredTorrents, st.Name,
+			if err := expr.Run(ctx, filteredTorrents, st.Name,
 				utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
 				dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)

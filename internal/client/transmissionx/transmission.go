@@ -2,9 +2,12 @@ package transmissionx
 
 import (
 	"context"
+	"log/slog"
 	"net/url"
 	"slices"
+	"time"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/hekmon/transmissionrpc/v3"
 
 	"github.com/swkisdust/torrentremover/internal/utils"
@@ -12,26 +15,44 @@ import (
 )
 
 type Transmission struct {
+	Host     string `mapstructure:"host"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+
 	client *transmissionrpc.Client
 }
 
-func NewTransmission(config model.ClientConfig) (*Transmission, error) {
-	endpoint, err := url.Parse(config.Host)
+func NewTransmission(config map[string]any) (*Transmission, error) {
+	var tr Transmission
+	decoder, err := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		WeaklyTypedInput:     true,
+		IgnoreUntaggedFields: true,
+		Result:               &tr,
+	})
 	if err != nil {
 		return nil, err
 	}
-	endpoint.User = url.UserPassword(config.Username, config.Password)
 
-	client, err := transmissionrpc.New(endpoint, nil)
+	if err := decoder.Decode(config); err != nil {
+		return nil, err
+	}
+
+	endpoint, err := url.Parse(tr.Host)
+	if err != nil {
+		return nil, err
+	}
+	endpoint.User = url.UserPassword(tr.Username, tr.Password)
+
+	tr.client, err = transmissionrpc.New(endpoint, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Transmission{client}, nil
+	return &tr, nil
 }
 
-func (tr *Transmission) GetTorrents() ([]model.Torrent, error) {
-	torrents, err := tr.client.TorrentGetAll(context.Background())
+func (tr *Transmission) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+	torrents, err := tr.client.TorrentGetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -42,25 +63,46 @@ func (tr *Transmission) GetTorrents() ([]model.Torrent, error) {
 		})), nil
 }
 
-func (tr *Transmission) DeleteTorrents(torrents []model.Torrent, deleteFiles bool) error {
-	return tr.client.TorrentRemove(context.Background(), transmissionrpc.TorrentRemovePayload{
-		IDs: slices.Collect(utils.IterMap(slices.Values(torrents),
-			func(t model.Torrent) int64 {
-				return t.ID.(int64)
-			})),
+func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) int64 {
+			return t.ID.(int64)
+		}))
+
+	slog.Debug("pausing torrents", "strategy", name)
+	if err := tr.client.TorrentStopIDs(ctx, ids); err != nil {
+		return err
+	}
+
+	// Waiting to pause torrents
+	time.Sleep(time.Second * 2)
+
+	slog.Debug("resuming torrents", "strategy", name)
+	if err := tr.client.TorrentStartIDs(ctx, ids); err != nil {
+		return err
+	}
+
+	// Waiting to resume torrents
+	time.Sleep(time.Second * 2)
+
+	if reannounce {
+		slog.Debug("reannouncing torrents", "strategy", name)
+		if err := tr.client.TorrentReannounceIDs(ctx, ids); err != nil {
+			return err
+		}
+
+		// Waiting for reannounce (might not needed)
+		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*10))
+	}
+
+	return tr.client.TorrentRemove(ctx, transmissionrpc.TorrentRemovePayload{
+		IDs:             ids,
 		DeleteLocalData: deleteFiles,
 	})
 }
 
-func (tr *Transmission) Reannounce(torrents []model.Torrent) error {
-	return tr.client.TorrentReannounceHashes(context.Background(), slices.Collect(utils.IterMap(slices.Values(torrents),
-		func(t model.Torrent) string {
-			return t.Hash
-		})))
-}
-
-func (tr *Transmission) GetFreeSpaceOnDisk(path string) model.Bytes {
-	free, _, err := tr.client.FreeSpace(context.Background(), path)
+func (tr *Transmission) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
+	free, _, err := tr.client.FreeSpace(ctx, path)
 	if err != nil {
 		return -1
 	}

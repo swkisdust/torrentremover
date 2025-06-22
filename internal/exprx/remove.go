@@ -2,6 +2,7 @@ package exprx
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -36,7 +37,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 	return &RemoveExpr{prog, client}, nil
 }
 
-func (r *RemoveExpr) Run(torrents []model.Torrent, name string, raInt time.Duration, dryRun, reannounce, deleteFiles bool) error {
+func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, raInt time.Duration, dryRun, reannounce, deleteFiles bool) error {
 	env := env{torrents, utils.ParseBytes, cmp.Compare[int64], cmp.Compare[float64]}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
@@ -84,17 +85,7 @@ func (r *RemoveExpr) Run(torrents []model.Torrent, name string, raInt time.Durat
 		return nil
 	}
 
-	if reannounce {
-		slog.Info("reannouncing torrents before deletion", "strategy", name)
-		if err := r.c.Reannounce(ft); err != nil {
-			return fmt.Errorf("c.Reannounce: %v", err)
-		}
-
-		// Waiting for reannounce (might not needed)
-		time.Sleep(utils.IfOr(raInt != 0, raInt, time.Second*10))
-	}
-
-	if err := r.c.DeleteTorrents(ft, deleteFiles); err != nil {
+	if err := r.c.DeleteTorrents(ctx, ft, name, reannounce, deleteFiles, raInt); err != nil {
 		return fmt.Errorf("c.DeleteTorrents: %v", err)
 	}
 

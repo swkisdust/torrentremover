@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/hekmon/transmissionrpc/v3"
+
 	"github.com/swkisdust/torrentremover/internal/format"
 	"github.com/swkisdust/torrentremover/internal/utils"
 )

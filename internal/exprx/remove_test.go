@@ -1,6 +1,7 @@
 package exprx
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"time"
@@ -52,11 +53,11 @@ var testCases = []model.Torrent{
 	},
 }
 
-func (c *mockClient) GetTorrents() ([]model.Torrent, error) {
+func (c *mockClient) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 	return testCases, nil
 }
 
-func (c *mockClient) DeleteTorrents(torrents []model.Torrent, deleteFiles bool) error {
+func (c *mockClient) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	c.t.Logf("received torrents %v", torrents)
 	if !reflect.DeepEqual(c.expected, torrents) {
 		c.t.Errorf("excepted %v, got %v", c.expected, torrents)
@@ -64,12 +65,7 @@ func (c *mockClient) DeleteTorrents(torrents []model.Torrent, deleteFiles bool) 
 	return nil
 }
 
-func (c *mockClient) Reannounce(torrents []model.Torrent) error {
-	c.t.Logf("reannounced torrents: %v", torrents)
-	return nil
-}
-
-func (c *mockClient) GetFreeSpaceOnDisk(path string) model.Bytes {
+func (c *mockClient) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
 	return 2 * 1024 * 1024 * 1024
 }
 
@@ -83,7 +79,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", 0, false, true, true); err != nil {
+		if err := expr.Run(context.Background(), testCases, "testSt", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})
@@ -97,7 +93,7 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(testCases, "testSt", 0, false, true, true); err != nil {
+		if err := expr.Run(context.Background(), testCases, "testSt", 0, false, true, true); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})

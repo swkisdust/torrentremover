@@ -15,19 +15,8 @@ type Config struct {
 }
 
 type Client struct {
-	Type   string       `json:"type"`
-	Config ClientConfig `json:"config"`
-}
-
-type ClientConfig struct {
-	Host     string `json:"host"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-
-	BasicUser string `json:"basic_user,omitempty"`
-	BasicPass string `json:"basic_pass,omitempty"`
-
-	InsecureTLS bool `json:"insecure_tls,omitempty"`
+	Type   string         `json:"type"`
+	Config map[string]any `json:"config"`
 }
 
 type LogConfig struct {

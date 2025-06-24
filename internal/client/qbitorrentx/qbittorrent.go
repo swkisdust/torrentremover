@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/autobrr/go-qbittorrent"
@@ -61,7 +62,10 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 		func(qt qbittorrent.Torrent) model.Torrent {
 			prop, _ := qb.client.GetTorrentPropertiesCtx(ctx, qt.Hash)
 			if len(qt.Trackers) == 0 {
-				qt.Trackers, _ = qb.client.GetTorrentTrackersCtx(ctx, qt.Hash)
+				trackers, _ := qb.client.GetTorrentTrackersCtx(ctx, qt.Hash)
+				qt.Trackers = slices.DeleteFunc(trackers, func(tt qbittorrent.TorrentTracker) bool {
+					return strings.Contains(tt.Url, "[DHT]") || strings.Contains(tt.Url, "[PeX]") || strings.Contains(tt.Url, "[LSD]")
+				})
 			}
 			return model.FromQbit(qt, prop)
 		})), nil

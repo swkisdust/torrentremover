@@ -90,23 +90,23 @@ func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, n
 		return t.Hash
 	}))
 
-	slog.Debug("pausing torrents", "strategy", name)
-	if err := d.client.PauseTorrents(ctx, hashes...); err != nil {
-		return err
-	}
-
-	// Waiting to pause torrents
-	time.Sleep(time.Second * 2)
-
-	slog.Debug("resuming torrents", "strategy", name)
-	if err := d.client.ResumeTorrents(ctx, hashes...); err != nil {
-		return err
-	}
-
-	// Waiting to resume torrents
-	time.Sleep(time.Second * 2)
-
 	if reannounce {
+		slog.Debug("pausing torrents", "strategy", name)
+		if err := d.client.PauseTorrents(ctx, hashes...); err != nil {
+			return err
+		}
+
+		// Waiting to pause torrents
+		time.Sleep(time.Second * 2)
+
+		slog.Debug("resuming torrents", "strategy", name)
+		if err := d.client.ResumeTorrents(ctx, hashes...); err != nil {
+			return err
+		}
+
+		// Waiting to resume torrents
+		time.Sleep(time.Second * 2)
+
 		slog.Debug("reannouncing torrents", "strategy", name)
 		if err := d.client.ForceReannounce(ctx, hashes); err != nil {
 			return err

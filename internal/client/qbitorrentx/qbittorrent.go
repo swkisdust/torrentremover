@@ -77,23 +77,23 @@ func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torre
 			return t.Hash
 		}))
 
-	slog.Debug("pausing torrents", "strategy", name)
-	if err := qb.client.PauseCtx(ctx, hashes); err != nil {
-		return err
-	}
-
-	// Waiting to pause torrents
-	time.Sleep(time.Second * 2)
-
-	slog.Debug("resuming torrents", "strategy", name)
-	if err := qb.client.ResumeCtx(ctx, hashes); err != nil {
-		return err
-	}
-
-	// Waiting to resume torrents
-	time.Sleep(time.Second * 2)
-
 	if reannounce {
+		slog.Debug("pausing torrents", "strategy", name)
+		if err := qb.client.PauseCtx(ctx, hashes); err != nil {
+			return err
+		}
+
+		// Waiting to pause torrents
+		time.Sleep(time.Second * 2)
+
+		slog.Debug("resuming torrents", "strategy", name)
+		if err := qb.client.ResumeCtx(ctx, hashes); err != nil {
+			return err
+		}
+
+		// Waiting to resume torrents
+		time.Sleep(time.Second * 2)
+
 		slog.Debug("reannouncing torrents", "strategy", name)
 		if err := qb.client.ReAnnounceTorrentsCtx(ctx, hashes); err != nil {
 			return err

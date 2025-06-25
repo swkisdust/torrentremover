@@ -55,6 +55,10 @@ func (s Status) HasFlag(flag Status) bool {
 	return s&flag == flag
 }
 
+func (s Status) String() string {
+	return fmt.Sprintf("0b%b", s)
+}
+
 func (s *Status) UnmarshalYAML(b []byte) error {
 	statusStr := strings.Trim(string(b), `"`)
 	code := GetStatus(statusStr)

@@ -63,6 +63,8 @@ func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 			"strategy", name,
 			"hash", t.Hash,
 			"name", t.Name,
+			"progress", t.Progress,
+			"status", t.Status,
 			"size", t.Size,
 			"ratio", t.Ratio,
 			"added_time", t.AddedTime,

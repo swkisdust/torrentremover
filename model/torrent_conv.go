@@ -22,7 +22,7 @@ func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) T
 		Name:         torrent.Name,
 		Status:       GetStatus(string(torrent.State)),
 		Ratio:        torrent.Ratio,
-		Progress:     torrent.Progress,
+		Progress:     torrent.Progress * 100,
 		Category:     torrent.Category,
 		Tags:         strings.Split(torrent.Tags, ","),
 		Size:         torrent.Size,

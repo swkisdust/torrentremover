@@ -15,6 +15,8 @@ import (
 type Strategy struct {
 	Name        string `json:"name"`
 	Filter      Filter `json:"filter"`
+	Action      string `json:"action,omitempty"`
+	Limit       Bytes  `json:"limit,omitempty"`
 	Reannounce  bool   `json:"reannounce,omitempty"`
 	DeleteFiles bool   `json:"delete_files,omitempty"`
 	DeleteDelay uint32 `json:"delete_delay,omitempty"`
@@ -144,6 +146,14 @@ func ContainStatus(s []Status, v Status) bool {
 }
 
 type Bytes int64
+
+func (b Bytes) KB() int64 {
+	return int64(b) / 1000
+}
+
+func (b Bytes) KiB() int64 {
+	return int64(b) / 1024
+}
 
 func (b *Bytes) UnmarshalYAML(buf []byte) error {
 	bytesStr := strings.Trim(string(buf), `"`)

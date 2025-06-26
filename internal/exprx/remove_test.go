@@ -57,6 +57,21 @@ func (c *mockClient) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 	return testCases, nil
 }
 
+func (c *mockClient) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+	c.t.Logf("received torrents %v", torrents)
+	return nil
+}
+
+func (c *mockClient) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+	c.t.Logf("received torrents %v", torrents)
+	return nil
+}
+
+func (c *mockClient) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+	c.t.Logf("received torrents %v", torrents)
+	return nil
+}
+
 func (c *mockClient) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	c.t.Logf("received torrents %v", torrents)
 	if !reflect.DeepEqual(c.expected, torrents) {
@@ -79,7 +94,10 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(context.Background(), testCases, "testSt", 0, false, true, true); err != nil {
+		if err := expr.Run(context.Background(), testCases, "testSt", RunOptions{
+			Reannounce:  true,
+			DeleteFiles: true,
+		}); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})
@@ -93,7 +111,10 @@ func TestRemoveExpr(t *testing.T) {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
-		if err := expr.Run(context.Background(), testCases, "testSt", 0, false, true, true); err != nil {
+		if err := expr.Run(context.Background(), testCases, "testSt", RunOptions{
+			Reannounce:  true,
+			DeleteFiles: true,
+		}); err != nil {
 			t.Errorf("failed to execute expr: %v", err)
 		}
 	})

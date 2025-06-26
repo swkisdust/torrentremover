@@ -71,6 +71,33 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 		})), nil
 }
 
+func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) string {
+			return t.Hash
+		}))
+
+	return qb.client.PauseCtx(ctx, hashes)
+}
+
+func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) string {
+			return t.Hash
+		}))
+
+	return qb.client.ResumeCtx(ctx, hashes)
+}
+
+func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) string {
+			return t.Hash
+		}))
+
+	return qb.client.SetTorrentUploadLimitCtx(ctx, hashes, int64(limit))
+}
+
 func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
 		func(t model.Torrent) string {

@@ -63,6 +63,45 @@ func (tr *Transmission) GetTorrents(ctx context.Context) ([]model.Torrent, error
 		})), nil
 }
 
+func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) int64 {
+			return t.ID.(int64)
+		}))
+
+	return tr.client.TorrentStopIDs(ctx, ids)
+}
+
+func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) int64 {
+			return t.ID.(int64)
+		}))
+
+	return tr.client.TorrentStartIDs(ctx, ids)
+}
+
+func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+		func(t model.Torrent) int64 {
+			return t.ID.(int64)
+		}))
+
+	var uploadSpeed int64
+	if limit == -1 {
+		uploadSpeed = -1
+	} else {
+		uploadSpeed = limit.KB()
+	}
+	limited := utils.IfOr(uploadSpeed == -1, false, true)
+
+	return tr.client.TorrentSet(ctx, transmissionrpc.TorrentSetPayload{
+		IDs:           ids,
+		UploadLimit:   &uploadSpeed,
+		UploadLimited: &limited,
+	})
+}
+
 func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
 		func(t model.Torrent) int64 {

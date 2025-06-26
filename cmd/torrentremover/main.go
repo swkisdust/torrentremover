@@ -182,10 +182,15 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 				slog.Debug("no matching torrents found", "strategy", st.Name)
 				continue
 			}
-			slog.Debug("filtered torrents", "strategy", st.Name, "value", filteredTorrents)
-			if err := expr.Run(ctx, filteredTorrents, st.Name,
-				utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
-				dryRun, profile.Reannounce || st.Reannounce, profile.DeleteFiles || st.DeleteFiles); err != nil {
+
+			if err := expr.Run(ctx, filteredTorrents, st.Name, exprx.RunOptions{
+				DryRun:      dryRun,
+				Reannounce:  profile.Reannounce || st.Reannounce,
+				DeleteFiles: profile.DeleteFiles || st.DeleteFiles,
+				Interval:    utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
+				Limit:       st.Limit,
+				Action:      st.Action,
+			}); err != nil {
 				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}

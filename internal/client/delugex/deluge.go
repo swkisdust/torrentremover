@@ -2,6 +2,7 @@ package delugex
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -83,6 +84,49 @@ func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 		func(id string, ds *deluge.TorrentStatus) model.Torrent {
 			return model.FromDeluge(id, ds)
 		})), nil
+}
+
+func (d *Deluge) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+		return t.Hash
+	}))
+
+	return d.client.PauseTorrents(ctx, hashes...)
+}
+
+func (d *Deluge) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+		return t.Hash
+	}))
+
+	return d.client.ResumeTorrents(ctx, hashes...)
+}
+
+func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+		return t.Hash
+	}))
+
+	var uploadSpeed int
+	if limit == -1 {
+		uploadSpeed = -1
+	} else {
+		uploadSpeed = int(limit.KiB())
+	}
+
+	opts := deluge.Options{
+		MaxUploadSpeed: &uploadSpeed,
+	}
+
+	var wrapErr error
+	for _, id := range hashes {
+		if err := d.client.SetTorrentOptions(ctx, id, &opts); err != nil {
+			wrapErr = errors.Join(wrapErr, err)
+			continue
+		}
+	}
+
+	return wrapErr
 }
 
 func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {

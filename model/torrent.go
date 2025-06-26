@@ -9,7 +9,7 @@ import (
 
 type Torrent struct {
 	ID           any           `json:"id" expr:"-"`
-	Hash         string        `json:"hash" expr:"-"`
+	Hash         string        `json:"hash" expr:"hash"`
 	Name         string        `json:"name" expr:"name"`
 	Ratio        float64       `json:"ratio" expr:"ratio"`
 	Progress     float64       `json:"progress" expr:"progress"`

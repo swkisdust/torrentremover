@@ -69,9 +69,14 @@ func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 		ft = append(ft, t)
 	}
 
+	if len(ft) < 1 {
+		slog.Debug("no matching torrents found", "strategy", name)
+		return nil
+	}
+
 	slog.Info("running torrent actions", "strategy", name)
 	for _, t := range ft {
-		slog.Debug("found eligible torrent",
+		slog.Info("found eligible torrent",
 			"strategy", name,
 			"hash", t.Hash,
 			"name", t.Name,
@@ -91,11 +96,6 @@ func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 
 	if options.DryRun {
 		slog.Debug("dry-run ended", "strategy", name)
-		return nil
-	}
-
-	if len(ft) < 1 {
-		slog.Debug("no matching torrents found", "strategy", name)
 		return nil
 	}
 

@@ -102,24 +102,24 @@ func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 		if err := r.c.ThrottleTorrents(ctx, ft, options.Limit); err != nil {
 			return fmt.Errorf("c.ThrottleTorrents: %v", err)
 		}
-		slog.Info("torrents throttled", "strategy", name, "limit", options.Limit)
+		slog.Info("torrents throttled", "strategy", name, "filtered", len(ft), "limit", options.Limit)
 	case "resume":
 		if err := r.c.ResumeTorrents(ctx, ft); err != nil {
 			return fmt.Errorf("c.ResumeTorrents: %v", err)
 		}
-		slog.Info("torrents resumed", "strategy", name)
+		slog.Info("torrents resumed", "strategy", name, "filtered", len(ft))
 	case "pause":
 		if err := r.c.PauseTorrents(ctx, ft); err != nil {
 			return fmt.Errorf("c.PauseTorrents: %v", err)
 		}
-		slog.Info("torrents paused", "strategy", name)
+		slog.Info("torrents paused", "strategy", name, "filtered", len(ft))
 	case "remove":
 		fallthrough
 	default:
 		if err := r.c.DeleteTorrents(ctx, ft, name, options.Reannounce, options.DeleteFiles, options.Interval); err != nil {
 			return fmt.Errorf("c.DeleteTorrents: %v", err)
 		}
-		slog.Info("torrents deleted", "strategy", name, "deleteFiles", options.DeleteFiles)
+		slog.Info("torrents deleted", "strategy", name, "filtered", len(ft), "deleteFiles", options.DeleteFiles)
 	}
 	return nil
 }

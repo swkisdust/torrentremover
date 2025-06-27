@@ -93,7 +93,7 @@ func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.T
 	} else {
 		uploadSpeed = limit.KB()
 	}
-	limited := utils.IfOr(uploadSpeed == -1, false, true)
+	limited := utils.IfOr(uploadSpeed < 1, false, true)
 
 	return tr.client.TorrentSet(ctx, transmissionrpc.TorrentSetPayload{
 		IDs:           ids,

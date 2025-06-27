@@ -23,6 +23,7 @@ type RemoveExpr struct {
 
 type env struct {
 	Torrents []model.Torrent               `expr:"torrents"`
+	Disk     int64                         `expr:"disk"`
 	Bytes    func(s string) (int64, error) `expr:"bytes"`
 	Cmp      func(a, b int64) int          `expr:"cmp"`
 	CmpFloat func(a, b float64) int        `expr:"cmpFloat"`
@@ -33,6 +34,7 @@ type RunOptions struct {
 	Reannounce  bool
 	DeleteFiles bool
 	Interval    time.Duration
+	Disk        int64
 	Limit       model.Bytes
 	Action      string
 }
@@ -47,7 +49,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 }
 
 func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
-	env := env{torrents, utils.ParseBytes, cmp.Compare[int64], cmp.Compare[float64]}
+	env := env{torrents, options.Disk, utils.ParseBytes, cmp.Compare[int64], cmp.Compare[float64]}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err

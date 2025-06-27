@@ -176,8 +176,8 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 				continue
 			}
 
-			filteredTorrents := model.FilterTorrents(st.Filter,
-				client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath)), torrents)
+			freeSpace := client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath))
+			filteredTorrents := model.FilterTorrents(st.Filter, freeSpace, torrents)
 			if len(filteredTorrents) < 1 {
 				slog.Debug("no matching torrents found", "strategy", st.Name)
 				continue
@@ -188,6 +188,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 				Reannounce:  profile.Reannounce || st.Reannounce,
 				DeleteFiles: profile.DeleteFiles || st.DeleteFiles,
 				Interval:    utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
+				Disk:        int64(freeSpace),
 				Limit:       st.Limit,
 				Action:      st.Action,
 			}); err != nil {

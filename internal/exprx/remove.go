@@ -26,7 +26,6 @@ type env struct {
 	Disk     int64                         `expr:"disk"`
 	Bytes    func(s string) (int64, error) `expr:"bytes"`
 	Cmp      func(a, b int64) int          `expr:"cmp"`
-	CmpFloat func(a, b float64) int        `expr:"cmpFloat"`
 }
 
 type RunOptions struct {
@@ -40,7 +39,7 @@ type RunOptions struct {
 }
 
 func Compile(raw string, client client.Client) (*RemoveExpr, error) {
-	prog, err := expr.Compile(raw, expr.Env(env{}), expr.AsKind(reflect.Slice))
+	prog, err := expr.Compile(raw, expr.Env(env{}), expr.AsKind(reflect.Slice), expr.Patch(cmpPatcher{}))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +48,7 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 }
 
 func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
-	env := env{torrents, options.Disk, utils.ParseBytes, cmp.Compare[int64], cmp.Compare[float64]}
+	env := env{torrents, options.Disk, utils.ParseBytes, cmp.Compare[int64]}
 	fti, err := expr.Run(r.prog, env)
 	if err != nil {
 		return err

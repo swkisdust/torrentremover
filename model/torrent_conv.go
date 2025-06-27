@@ -52,7 +52,7 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 		Name:         *torrent.Name,
 		Status:       FromTrStatus(*torrent.Status),
 		Ratio:        *torrent.UploadRatio,
-		Progress:     *torrent.PercentDone,
+		Progress:     *torrent.PercentDone * 100,
 		Tags:         torrent.Labels,
 		Size:         int64(torrent.TotalSize.Byte()),
 		Leecher: utils.Reduce(func(sum int64, v transmissionrpc.TrackerStats) int64 {

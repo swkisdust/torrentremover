@@ -22,20 +22,22 @@ type RemoveExpr struct {
 }
 
 type env struct {
-	Torrents []model.Torrent               `expr:"torrents"`
-	Disk     int64                         `expr:"disk"`
-	Bytes    func(s string) (int64, error) `expr:"bytes"`
-	Cmp      func(a, b int64) int          `expr:"cmp"`
+	Torrents     []model.Torrent               `expr:"torrents"`
+	Disk         int64                         `expr:"disk"`
+	SessionStats model.SessionStats            `expr:"stats"`
+	Bytes        func(s string) (int64, error) `expr:"bytes"`
+	Cmp          func(a, b int64) int          `expr:"cmp"`
 }
 
 type RunOptions struct {
-	DryRun      bool
-	Reannounce  bool
-	DeleteFiles bool
-	Interval    time.Duration
-	Disk        int64
-	Limit       model.Bytes
-	Action      string
+	DryRun       bool
+	Reannounce   bool
+	DeleteFiles  bool
+	Interval     time.Duration
+	Disk         int64
+	Limit        model.Bytes
+	Action       string
+	SessionStats model.SessionStats
 }
 
 func Compile(raw string, client client.Client) (*RemoveExpr, error) {
@@ -47,9 +49,15 @@ func Compile(raw string, client client.Client) (*RemoveExpr, error) {
 	return &RemoveExpr{prog, client}, nil
 }
 
-func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
-	env := env{torrents, options.Disk, utils.ParseBytes, cmp.Compare[int64]}
-	fti, err := expr.Run(r.prog, env)
+func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
+	env := env{
+		Torrents:     torrents,
+		Disk:         options.Disk,
+		SessionStats: options.SessionStats,
+		Bytes:        utils.ParseBytes,
+		Cmp:          cmp.Compare[int64],
+	}
+	fti, err := expr.Run(x.prog, env)
 	if err != nil {
 		return err
 	}
@@ -100,24 +108,24 @@ func (r *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 
 	switch options.Action {
 	case "throttle":
-		if err := r.c.ThrottleTorrents(ctx, ft, options.Limit); err != nil {
+		if err := x.c.ThrottleTorrents(ctx, ft, options.Limit); err != nil {
 			return fmt.Errorf("c.ThrottleTorrents: %v", err)
 		}
 		slog.Info("torrents throttled", "strategy", name, "filtered", len(ft), "limit", options.Limit)
 	case "resume":
-		if err := r.c.ResumeTorrents(ctx, ft); err != nil {
+		if err := x.c.ResumeTorrents(ctx, ft); err != nil {
 			return fmt.Errorf("c.ResumeTorrents: %v", err)
 		}
 		slog.Info("torrents resumed", "strategy", name, "filtered", len(ft))
 	case "pause":
-		if err := r.c.PauseTorrents(ctx, ft); err != nil {
+		if err := x.c.PauseTorrents(ctx, ft); err != nil {
 			return fmt.Errorf("c.PauseTorrents: %v", err)
 		}
 		slog.Info("torrents paused", "strategy", name, "filtered", len(ft))
 	case "remove":
 		fallthrough
 	default:
-		if err := r.c.DeleteTorrents(ctx, ft, name, options.Reannounce, options.DeleteFiles, options.Interval); err != nil {
+		if err := x.c.DeleteTorrents(ctx, ft, name, options.Reannounce, options.DeleteFiles, options.Interval); err != nil {
 			return fmt.Errorf("c.DeleteTorrents: %v", err)
 		}
 		slog.Info("torrents deleted", "strategy", name, "filtered", len(ft), "deleteFiles", options.DeleteFiles)

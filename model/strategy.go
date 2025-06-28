@@ -21,7 +21,7 @@ type Strategy struct {
 	DeleteFiles bool   `json:"delete_files,omitempty"`
 	DeleteDelay uint32 `json:"delete_delay,omitempty"`
 	Mountpath   string `json:"mount_path,omitempty"`
-	RemoveExpr  string `json:"remove"`
+	RemoveExpr  string `json:"expr,omitempty"`
 }
 
 type Filter struct {

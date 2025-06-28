@@ -74,7 +74,7 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 	}
 }
 
-func FromDeluge(id string, ts *deluge.TorrentStatus) Torrent {
+func FromDeluge(id string, ts *deluge.TorrentStatus, label string) Torrent {
 	addedTime := time.Unix(int64(ts.TimeAdded), 0)
 
 	return Torrent{
@@ -88,6 +88,7 @@ func FromDeluge(id string, ts *deluge.TorrentStatus) Torrent {
 		Status:       GetStatus(ts.State),
 		Ratio:        float64(ts.Ratio),
 		Progress:     float64(ts.Progress),
+		Category:     label,
 		Size:         ts.TotalSize,
 		Leecher:      ts.TotalPeers,
 		Seeder:       ts.TotalSeeds,

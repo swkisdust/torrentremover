@@ -18,13 +18,19 @@ import (
 	"github.com/swkisdust/torrentremover/model"
 )
 
+type delugeClient interface {
+	deluge.DelugeClient
+	LabelPlugin(ctx context.Context) (*deluge.LabelPlugin, error)
+}
+
 type Deluge struct {
 	Host     string `mapstructure:"host"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
 	V2       bool   `mapstructure:"v2"`
 
-	client deluge.DelugeClient
+	lp     *deluge.LabelPlugin
+	client delugeClient
 }
 
 func NewDeluge(ctx context.Context, config map[string]any) (*Deluge, error) {
@@ -60,11 +66,17 @@ func NewDeluge(ctx context.Context, config map[string]any) (*Deluge, error) {
 		ReadWriteTimeout: time.Second * 5,
 	}
 
-	var client deluge.DelugeClient
+	var client delugeClient
 	if !d.V2 {
 		client = deluge.NewV1(settings)
 	} else {
 		client = deluge.NewV2(settings)
+	}
+
+	if lp, err := client.LabelPlugin(ctx); err == nil {
+		d.lp = lp
+	} else {
+		slog.Warn("failed to retrieve deluge label plugin", "error", err)
 	}
 
 	if err := client.Connect(ctx); err != nil {
@@ -80,9 +92,18 @@ func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 		return nil, err
 	}
 
+	var labels map[string]string
+	if d.lp != nil {
+		if labels, err = d.lp.GetTorrentsLabels(deluge.StateUnspecified, nil); err != nil {
+			return nil, err
+		}
+	} else {
+		labels = make(map[string]string)
+	}
+
 	return slices.Collect(utils.Seq2To1(maps.All(torrents),
 		func(id string, ds *deluge.TorrentStatus) model.Torrent {
-			return model.FromDeluge(id, ds)
+			return model.FromDeluge(id, ds, labels[id])
 		})), nil
 }
 
@@ -164,10 +185,22 @@ func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, n
 	return err
 }
 
-func (d *Deluge) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
+func (d *Deluge) GetFreeSpaceOnDisk(ctx context.Context, path string) (model.Bytes, error) {
 	size, err := d.client.GetFreeSpace(ctx, path)
 	if err != nil {
-		return -1
+		return -1, err
 	}
-	return model.Bytes(size)
+	return model.Bytes(size), nil
+}
+
+func (d *Deluge) SessionStats(ctx context.Context) (model.SessionStats, error) {
+	var stats model.SessionStats
+	dstats, err := d.client.GetSessionStatus(ctx)
+	if err != nil {
+		return stats, err
+	}
+
+	stats.TotalDlSpeed = int64(dstats.DownloadRate)
+	stats.TotalUpSpeed = int64(dstats.UploadRate)
+	return stats, nil
 }

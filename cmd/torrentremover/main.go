@@ -160,23 +160,31 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 	for _, profile := range c.Profiles {
 		client, ok := clientMap[profile.Client]
 		if !ok {
-			slog.Warn("client not found", "client_id", profile.Client)
+			slog.Error("client not found", "client_id", profile.Client)
 			continue
 		}
 
 		torrents, err := client.GetTorrents(ctx)
 		if err != nil {
-			slog.Warn("failed to get torrent list", "error", err)
+			slog.Error("failed to get torrent list", "error", err)
+			continue
 		}
 		slog.Debug("available torrents", "value", torrents)
 		for _, st := range profile.Strategy {
 			expr, err := exprx.Compile(st.RemoveExpr, client)
 			if err != nil {
-				slog.Warn("failed to compile expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
+				slog.Error("failed to compile expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 				continue
 			}
 
-			freeSpace := client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath))
+			freeSpace, err := client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath))
+			if err != nil {
+				slog.Warn("failed to get free space on disk", "strategy", st.Name, "client_id", profile.Client, "error", err)
+			}
+			stats, err := client.SessionStats(ctx)
+			if err != nil {
+				slog.Warn("failed to get session stats", "strategy", st.Name, "client_id", profile.Client, "error", err)
+			}
 			filteredTorrents := model.FilterTorrents(st.Filter, freeSpace, torrents)
 			if len(filteredTorrents) < 1 {
 				slog.Debug("no matching torrents found", "strategy", st.Name)
@@ -184,15 +192,16 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 			}
 
 			if err := expr.Run(ctx, filteredTorrents, st.Name, exprx.RunOptions{
-				DryRun:      dryRun,
-				Reannounce:  profile.Reannounce || st.Reannounce,
-				DeleteFiles: profile.DeleteFiles || st.DeleteFiles,
-				Interval:    utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
-				Disk:        int64(freeSpace),
-				Limit:       st.Limit,
-				Action:      st.Action,
+				DryRun:       dryRun,
+				Reannounce:   profile.Reannounce || st.Reannounce,
+				DeleteFiles:  profile.DeleteFiles || st.DeleteFiles,
+				Interval:     utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
+				Disk:         int64(freeSpace),
+				Limit:        st.Limit,
+				Action:       st.Action,
+				SessionStats: stats,
 			}); err != nil {
-				slog.Warn("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
+				slog.Error("failed to execute expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
 		}
 	}

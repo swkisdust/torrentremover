@@ -140,10 +140,22 @@ func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Tor
 	})
 }
 
-func (tr *Transmission) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
+func (tr *Transmission) GetFreeSpaceOnDisk(ctx context.Context, path string) (model.Bytes, error) {
 	free, _, err := tr.client.FreeSpace(ctx, path)
 	if err != nil {
-		return -1
+		return -1, err
 	}
-	return model.Bytes(free.Byte())
+	return model.Bytes(free.Byte()), nil
+}
+
+func (tr *Transmission) SessionStats(ctx context.Context) (model.SessionStats, error) {
+	var stats model.SessionStats
+	tstats, err := tr.client.SessionStats(ctx)
+	if err != nil {
+		return stats, err
+	}
+
+	stats.TotalDlSpeed = tstats.DownloadSpeed
+	stats.TotalUpSpeed = tstats.UploadSpeed
+	return stats, nil
 }

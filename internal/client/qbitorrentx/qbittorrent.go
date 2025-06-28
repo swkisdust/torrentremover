@@ -136,10 +136,22 @@ func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torre
 		})), deleteFiles)
 }
 
-func (qb *Qbitorrent) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
+func (qb *Qbitorrent) GetFreeSpaceOnDisk(ctx context.Context, path string) (model.Bytes, error) {
 	val, err := qb.client.GetFreeSpaceOnDiskCtx(ctx)
 	if err != nil {
-		return -1
+		return -1, err
 	}
-	return model.Bytes(val)
+	return model.Bytes(val), nil
+}
+
+func (qb *Qbitorrent) SessionStats(ctx context.Context) (model.SessionStats, error) {
+	var stats model.SessionStats
+	maindata, err := qb.client.SyncMainDataCtx(ctx, 0)
+	if err != nil {
+		return stats, err
+	}
+
+	stats.TotalDlSpeed = maindata.ServerState.DlInfoSpeed
+	stats.TotalUpSpeed = maindata.ServerState.UpInfoSpeed
+	return stats, nil
 }

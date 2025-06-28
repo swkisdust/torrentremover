@@ -80,8 +80,12 @@ func (c *mockClient) DeleteTorrents(ctx context.Context, torrents []model.Torren
 	return nil
 }
 
-func (c *mockClient) GetFreeSpaceOnDisk(ctx context.Context, path string) model.Bytes {
-	return 2 * 1024 * 1024 * 1024
+func (c *mockClient) GetFreeSpaceOnDisk(ctx context.Context, path string) (model.Bytes, error) {
+	return 2 * 1024 * 1024 * 1024, nil
+}
+
+func (c *mockClient) SessionStats(ctx context.Context) (model.SessionStats, error) {
+	return model.SessionStats{}, nil
 }
 
 func TestRemoveExpr(t *testing.T) {

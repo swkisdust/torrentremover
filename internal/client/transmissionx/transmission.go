@@ -131,7 +131,7 @@ func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Tor
 		}
 
 		// Waiting for reannounce (might not needed)
-		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*10))
+		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*4))
 	}
 
 	return tr.client.TorrentRemove(ctx, transmissionrpc.TorrentRemovePayload{

@@ -6,6 +6,7 @@ import (
 
 	"slices"
 
+	"github.com/expr-lang/expr/vm"
 	"github.com/hekmon/transmissionrpc/v3"
 
 	"github.com/swkisdust/torrentremover/internal/format"
@@ -13,15 +14,17 @@ import (
 )
 
 type Strategy struct {
-	Name        string `json:"name"`
-	Filter      Filter `json:"filter"`
-	Action      string `json:"action,omitempty"`
-	Limit       Bytes  `json:"limit,omitempty"`
-	Reannounce  bool   `json:"reannounce,omitempty"`
-	DeleteFiles bool   `json:"delete_files,omitempty"`
-	DeleteDelay uint32 `json:"delete_delay,omitempty"`
-	Mountpath   string `json:"mount_path,omitempty"`
-	RemoveExpr  string `json:"expr,omitempty"`
+	Name        string      `json:"name"`
+	Filter      Filter      `json:"filter"`
+	Action      string      `json:"action,omitempty"`
+	Limit       Bytes       `json:"limit,omitempty"`
+	Reannounce  bool        `json:"reannounce,omitempty"`
+	DeleteFiles bool        `json:"delete_files,omitempty"`
+	DeleteDelay uint32      `json:"delete_delay,omitempty"`
+	Duration    uint32      `json:"duration,omitempty"`
+	Mountpath   string      `json:"mount_path,omitempty"`
+	RemoveExpr  string      `json:"expr,omitempty"`
+	Prog        *vm.Program `json:"-"`
 }
 
 type Filter struct {

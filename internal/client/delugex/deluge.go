@@ -178,7 +178,7 @@ func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, n
 		}
 
 		// Waiting for reannounce (might not needed)
-		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*10))
+		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*4))
 	}
 
 	_, err := d.client.RemoveTorrents(ctx, hashes, deleteFiles)

@@ -97,7 +97,7 @@ func setupDaemon(ctx context.Context, c *model.Config, dryRun bool) error {
 
 	slog.Info("running in daemon mode", "cronexp", c.Daemon.CronExp)
 	cronLogger := logx.NewCronLogger(slog.Default())
-	cronScheduler := cron.New(cron.WithLogger(cronLogger), cron.WithChain(
+	cronScheduler := cron.New(cron.WithLogger(cronLogger), cron.WithSeconds(), cron.WithChain(
 		cron.Recover(cronLogger),
 		cron.SkipIfStillRunning(cronLogger),
 	))
@@ -171,10 +171,13 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 		}
 		slog.Debug("available torrents", "value", torrents)
 		for _, st := range profile.Strategy {
-			expr, err := exprx.Compile(st.RemoveExpr, client)
-			if err != nil {
-				slog.Error("failed to compile expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
-				continue
+			if st.Prog == nil {
+				prog, err := exprx.Compile(st.RemoveExpr, client)
+				if err != nil {
+					slog.Error("failed to compile expr", "strategy", st.Name, "client_id", profile.Client, "error", err)
+					continue
+				}
+				st.Prog = prog
 			}
 
 			freeSpace, err := client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath))
@@ -191,6 +194,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 				continue
 			}
 
+			expr := exprx.New(st.Prog, client)
 			if err := expr.Run(ctx, filteredTorrents, st.Name, exprx.RunOptions{
 				DryRun:       dryRun,
 				Reannounce:   profile.Reannounce || st.Reannounce,

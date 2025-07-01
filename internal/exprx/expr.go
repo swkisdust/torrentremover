@@ -40,13 +40,17 @@ type RunOptions struct {
 	SessionStats model.SessionStats
 }
 
-func Compile(raw string, client client.Client) (*RemoveExpr, error) {
+func Compile(raw string, client client.Client) (*vm.Program, error) {
 	prog, err := expr.Compile(raw, expr.Env(env{}), expr.AsKind(reflect.Slice), expr.Patch(cmpPatcher{}))
 	if err != nil {
 		return nil, err
 	}
 
-	return &RemoveExpr{prog, client}, nil
+	return prog, nil
+}
+
+func New(prog *vm.Program, client client.Client) *RemoveExpr {
+	return &RemoveExpr{prog, client}
 }
 
 func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {

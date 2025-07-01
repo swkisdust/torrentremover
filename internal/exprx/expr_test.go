@@ -93,11 +93,12 @@ func TestRemoveExpr(t *testing.T) {
 		const exprStr = `filter(torrents, .size > 10240000 && .seeding_time > duration("1h"))`
 		client := &mockClient{t, testCases[1:3]}
 
-		expr, err := Compile(exprStr, client)
+		prog, err := Compile(exprStr, client)
 		if err != nil {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
+		expr := New(prog, client)
 		if err := expr.Run(context.Background(), testCases, "testSt", RunOptions{
 			Reannounce:  true,
 			DeleteFiles: true,
@@ -110,11 +111,12 @@ func TestRemoveExpr(t *testing.T) {
 		const exprStr = `filter(torrents, .seeder / .leecher < 1 && now() - .last_activity > duration("1h"))`
 		client := &mockClient{t, testCases[2:3]}
 
-		expr, err := Compile(exprStr, client)
+		prog, err := Compile(exprStr, client)
 		if err != nil {
 			t.Errorf("failed to compile expr: %v", err)
 		}
 
+		expr := New(prog, client)
 		if err := expr.Run(context.Background(), testCases, "testSt", RunOptions{
 			Reannounce:  true,
 			DeleteFiles: true,

@@ -5,16 +5,16 @@ go 1.24.4
 require (
 	github.com/autobrr/go-deluge v1.3.1-0.20250503123942-245951c90584
 	github.com/autobrr/go-qbittorrent v1.14.0
-	github.com/expr-lang/expr v1.17.5
-	github.com/go-viper/mapstructure/v2 v2.3.0
+	github.com/expr-lang/expr v1.17.6
+	github.com/go-viper/mapstructure/v2 v2.4.0
 	github.com/goccy/go-yaml v1.18.0
 	github.com/hekmon/transmissionrpc/v3 v3.0.0
 	github.com/lmittmann/tint v1.1.2
 	github.com/mattn/go-colorable v0.1.14
 	github.com/mattn/go-isatty v0.0.20
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/urfave/cli/v3 v3.3.3
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
+	github.com/urfave/cli/v3 v3.4.1
+	golang.org/x/exp v0.0.0-20250819193227-8b4c13bb791b
 )
 
 require (

@@ -24,6 +24,7 @@ type RemoveExpr struct {
 type env struct {
 	Torrents     []model.Torrent               `expr:"torrents"`
 	Disk         int64                         `expr:"disk"`
+	WantSpace    int64                         `expr:"want_space"`
 	SessionStats model.SessionStats            `expr:"stats"`
 	Bytes        func(s string) (int64, error) `expr:"bytes"`
 	Cmp          func(a, b int64) int          `expr:"cmp"`
@@ -35,6 +36,7 @@ type RunOptions struct {
 	DeleteFiles  bool
 	Interval     time.Duration
 	Disk         int64
+	WantSpace    int64
 	Limit        model.Bytes
 	Action       string
 	SessionStats model.SessionStats
@@ -59,6 +61,7 @@ func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 		Disk:         options.Disk,
 		SessionStats: options.SessionStats,
 		Bytes:        utils.ParseBytes,
+		WantSpace:    options.WantSpace,
 		Cmp:          cmp.Compare[int64],
 	}
 	fti, err := expr.Run(x.prog, env)

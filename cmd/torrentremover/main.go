@@ -202,6 +202,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 				Interval:     utils.IfOr(st.DeleteDelay != 0, time.Duration(st.DeleteDelay)*time.Second, time.Duration(profile.DeleteDelay)*time.Second),
 				Disk:         int64(freeSpace),
 				Limit:        st.Limit,
+				WantSpace:    int64(st.Filter.Disk),
 				Action:       st.Action,
 				SessionStats: stats,
 			}); err != nil {

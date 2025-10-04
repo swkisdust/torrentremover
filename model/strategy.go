@@ -65,7 +65,7 @@ func (s Status) String() string {
 }
 
 func (s *Status) UnmarshalYAML(b []byte) error {
-	statusStr := strings.Trim(string(b), `"`)
+	statusStr := strings.Trim(strings.TrimSpace(string(b)), `"`)
 	code := GetStatus(statusStr)
 	if code == 0 && statusStr != "" {
 		return fmt.Errorf("invalid status string in YAML: %q", statusStr)
@@ -91,6 +91,8 @@ func GetStatus(s string) Status {
 		return StatusError
 	case "checking":
 		return StatusChecking
+	case "stalled":
+		return StatusStalled
 	// qbittorrent status
 	case "pausedup", "pausedupload":
 		return StatusPaused | StatusUploading

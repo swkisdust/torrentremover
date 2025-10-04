@@ -142,7 +142,7 @@ func parseClients(ctx context.Context, c *model.Config) map[string]client.Client
 			} else {
 				slog.Warn("failed to create transmission client", "name", name, "config", config.Config, "error", err)
 			}
-		case "deluge", "deluge_v2":
+		case "deluge":
 			if client, err := delugex.NewDeluge(ctx, config.Config); err == nil {
 				clientMap[name] = client
 			} else {

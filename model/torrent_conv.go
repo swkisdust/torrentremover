@@ -34,10 +34,14 @@ func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) T
 		AvgUpSpeed:   int64(prop.UpSpeedAvg),
 		Downloaded:   torrent.Downloaded,
 		Uploaded:     torrent.Uploaded,
-		Trackers: slices.Collect(utils.IterMap(slices.Values(torrent.Trackers),
-			func(qt qbittorrent.TorrentTracker) string {
-				return qt.Url
-			})),
+		Trackers: utils.SliceMap(torrent.Trackers,
+			func(qt qbittorrent.TorrentTracker) TorrentTracker {
+				return TorrentTracker{
+					URL:     qt.Url,
+					Status:  int(qt.Status),
+					Message: qt.Message,
+				}
+			}),
 	}
 }
 
@@ -47,7 +51,6 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 		LastActivity: utils.IfOr(torrent.ActivityDate.Unix() == 0, time.Time{}, *torrent.ActivityDate),
 		TimeElapsed:  time.Since(*torrent.AddedDate),
 		SeedingTime:  *torrent.TimeSeeding,
-		ID:           *torrent.ID,
 		Hash:         *torrent.HashString,
 		Name:         *torrent.Name,
 		Status:       FromTrStatus(*torrent.Status),
@@ -67,14 +70,20 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 		AvgUpSpeed: utils.SafeDivide(*torrent.UploadedEver, int64(torrent.TimeSeeding.Seconds())),
 		Downloaded: *torrent.DownloadedEver,
 		Uploaded:   *torrent.UploadedEver,
-		Trackers: slices.Collect(utils.IterMap(slices.Values(torrent.Trackers),
-			func(tt transmissionrpc.Tracker) string {
-				return tt.Announce
+		Trackers: slices.Collect(utils.IterMap(slices.Values(torrent.TrackerStats),
+			func(tt transmissionrpc.TrackerStats) TorrentTracker {
+				return TorrentTracker{
+					URL:     tt.Announce,
+					Status:  int(tt.AnnounceState),
+					Message: tt.LastAnnounceResult,
+				}
 			})),
+
+		ClientData: *torrent.ID,
 	}
 }
 
-func FromDeluge(id string, ts *deluge.TorrentStatus, label string) Torrent {
+func FromDeluge(ts *deluge.TorrentStatus, label string) Torrent {
 	addedTime := time.Unix(int64(ts.TimeAdded), 0)
 
 	return Torrent{
@@ -82,7 +91,6 @@ func FromDeluge(id string, ts *deluge.TorrentStatus, label string) Torrent {
 		LastActivity: utils.IfOr(ts.LastSeenComplete == 0, time.Time{}, time.Unix(ts.LastSeenComplete, 0)),
 		TimeElapsed:  time.Since(addedTime),
 		SeedingTime:  time.Duration(ts.SeedingTime) * time.Second,
-		ID:           id,
 		Hash:         ts.Hash,
 		Name:         ts.Name,
 		Status:       GetStatus(ts.State),
@@ -98,6 +106,11 @@ func FromDeluge(id string, ts *deluge.TorrentStatus, label string) Torrent {
 		AvgDlSpeed:   utils.SafeDivide(ts.AllTimeDownload, (ts.ActiveTime - ts.CompletedTime)),
 		Downloaded:   ts.AllTimeDownload,
 		Uploaded:     ts.TotalUploaded,
-		Trackers:     []string{ts.TrackerHost},
+		Trackers: []TorrentTracker{
+			{
+				URL:     ts.TrackerHost,
+				Message: ts.TrackerStatus,
+			},
+		},
 	}
 }

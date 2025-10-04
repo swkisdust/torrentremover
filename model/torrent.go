@@ -8,13 +8,12 @@ import (
 )
 
 type Torrent struct {
-	ID           any           `json:"id" expr:"-"`
 	Hash         string        `json:"hash" expr:"hash"`
 	Name         string        `json:"name" expr:"name"`
 	Ratio        float64       `json:"ratio" expr:"ratio"`
 	Progress     float64       `json:"progress" expr:"progress"`
-	Category     string        `json:"category" expr:"-"`
-	Tags         []string      `json:"tags" expr:"-"`
+	Category     string        `json:"category" expr:"category"`
+	Tags         []string      `json:"tags" expr:"tags"`
 	Status       Status        `json:"status" expr:"status"`
 	Size         int64         `json:"size" expr:"size"`
 	Leecher      int64         `json:"leecher" expr:"leecher"`
@@ -30,7 +29,9 @@ type Torrent struct {
 	SeedingTime  time.Duration `json:"seeding_time" expr:"seeding_time"`
 	TimeElapsed  time.Duration `json:"time_elapsed" expr:"time_elapsed"`
 
-	Trackers []string `json:"trackers" expr:"-"`
+	Trackers []TorrentTracker `json:"trackers" expr:"trackers"`
+
+	ClientData any `json:"-" expr:"-"` // optional field for client-specific usage
 }
 
 func (t Torrent) String() string {
@@ -46,6 +47,8 @@ func FilterTorrents(f Filter, freeSpace Bytes, torrents []Torrent) []Torrent {
 	copy(dup, torrents)
 
 	return slices.DeleteFunc(dup, func(torrent Torrent) bool {
+		trackers := utils.SliceMap(torrent.Trackers, func(trackerStat TorrentTracker) string { return trackerStat.URL })
+
 		if len(f.ExcludedCategories) > 0 && slices.Contains(f.ExcludedCategories, torrent.Category) {
 			return true
 		}
@@ -55,7 +58,7 @@ func FilterTorrents(f Filter, freeSpace Bytes, torrents []Torrent) []Torrent {
 		if len(f.ExcludedStatus) > 0 && ContainStatus(f.ExcludedStatus, torrent.Status) {
 			return true
 		}
-		if len(f.ExcludedTrackers) > 0 && len(torrent.Trackers) > 0 && utils.SlicesHaveSubstrings(torrent.Trackers, f.ExcludedTrackers...) {
+		if len(f.ExcludedTrackers) > 0 && len(torrent.Trackers) > 0 && utils.SlicesHaveSubstrings(trackers, f.ExcludedTrackers...) {
 			return true
 		}
 		if len(f.Categories) > 0 && !slices.Contains(f.Categories, torrent.Category) {
@@ -67,9 +70,15 @@ func FilterTorrents(f Filter, freeSpace Bytes, torrents []Torrent) []Torrent {
 		if len(f.Status) > 0 && !ContainStatus(f.Status, torrent.Status) {
 			return true
 		}
-		if len(f.Trackers) > 0 && !utils.SlicesHaveSubstrings(torrent.Trackers, f.Trackers...) {
+		if len(f.Trackers) > 0 && !utils.SlicesHaveSubstrings(trackers, f.Trackers...) {
 			return true
 		}
 		return false
 	})
+}
+
+type TorrentTracker struct {
+	URL     string `json:"url" expr:"url"`
+	Status  int    `json:"status" expr:"status"`
+	Message string `json:"message" expr:"message"`
 }

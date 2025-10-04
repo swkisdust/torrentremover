@@ -103,30 +103,30 @@ func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 
 	return slices.Collect(utils.Seq2To1(maps.All(torrents),
 		func(id string, ds *deluge.TorrentStatus) model.Torrent {
-			return model.FromDeluge(id, ds, labels[id])
+			return model.FromDeluge(ds, labels[id])
 		})), nil
 }
 
 func (d *Deluge) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+	hashes := utils.SliceMap(torrents, func(t model.Torrent) string {
 		return t.Hash
-	}))
+	})
 
 	return d.client.PauseTorrents(ctx, hashes...)
 }
 
 func (d *Deluge) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+	hashes := utils.SliceMap(torrents, func(t model.Torrent) string {
 		return t.Hash
-	}))
+	})
 
 	return d.client.ResumeTorrents(ctx, hashes...)
 }
 
 func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+	hashes := utils.SliceMap(torrents, func(t model.Torrent) string {
 		return t.Hash
-	}))
+	})
 
 	var uploadSpeed int
 	if limit == -1 {
@@ -151,9 +151,9 @@ func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []model.Torrent,
 }
 
 func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents), func(t model.Torrent) string {
+	hashes := utils.SliceMap(torrents, func(t model.Torrent) string {
 		return t.Hash
-	}))
+	})
 
 	if reannounce {
 		slog.Debug("pausing torrents", "strategy", name)

@@ -32,3 +32,7 @@ func SlicesHaveSubstrings(s []string, substrings ...string) bool {
 	}
 	return false
 }
+
+func SliceMap[S ~[]EIn, EIn, EOut any](s S, f func(e EIn) EOut) []EOut {
+	return slices.Collect(IterMap(slices.Values(s), f))
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/url"
-	"slices"
 	"time"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -57,35 +56,35 @@ func (tr *Transmission) GetTorrents(ctx context.Context) ([]model.Torrent, error
 		return nil, err
 	}
 
-	return slices.Collect(utils.IterMap(slices.Values(torrents),
+	return utils.SliceMap(torrents,
 		func(tt transmissionrpc.Torrent) model.Torrent {
 			return model.FromTrans(tt)
-		})), nil
+		}), nil
 }
 
 func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+	ids := utils.SliceMap(torrents,
 		func(t model.Torrent) int64 {
-			return t.ID.(int64)
-		}))
+			return t.ClientData.(int64)
+		})
 
 	return tr.client.TorrentStopIDs(ctx, ids)
 }
 
 func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+	ids := utils.SliceMap(torrents,
 		func(t model.Torrent) int64 {
-			return t.ID.(int64)
-		}))
+			return t.ClientData.(int64)
+		})
 
 	return tr.client.TorrentStartIDs(ctx, ids)
 }
 
 func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+	ids := utils.SliceMap(torrents,
 		func(t model.Torrent) int64 {
-			return t.ID.(int64)
-		}))
+			return t.ClientData.(int64)
+		})
 
 	var uploadSpeed int64
 	if limit == -1 {
@@ -103,10 +102,10 @@ func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.T
 }
 
 func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	ids := slices.Collect(utils.IterMap(slices.Values(torrents),
+	ids := utils.SliceMap(torrents,
 		func(t model.Torrent) int64 {
-			return t.ID.(int64)
-		}))
+			return t.ClientData.(int64)
+		})
 
 	if reannounce {
 		slog.Debug("pausing torrents", "strategy", name)

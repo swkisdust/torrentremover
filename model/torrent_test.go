@@ -5,16 +5,18 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/swkisdust/torrentremover/internal/utils"
 )
 
 func TestFilterTorrents(t *testing.T) {
 	testTorrents := []Torrent{
-		{Name: "Movie A", Category: "Movies", Tags: []string{"hd", "2023"}, Status: StatusUploading, Trackers: []string{"tracker.a.com", "tracker.b.com"}},
-		{Name: "TV Show B", Category: "TV Shows", Tags: []string{"4k", "series"}, Status: StatusDownloading, Trackers: []string{"tracker.c.com"}},
-		{Name: "Game C", Category: "Games", Tags: []string{"pc", "rpg"}, Status: StatusPaused, Trackers: []string{"tracker.d.com"}},
-		{Name: "Music D", Category: "Music", Tags: []string{"flac"}, Status: StatusUploading, Trackers: []string{"tracker.e.com"}},
-		{Name: "Movie E", Category: "Movies", Tags: []string{"sd", "old"}, Status: StatusStopped | StatusUploading, Trackers: []string{"tracker.a.com", "tracker.f.com"}},
-		{Name: "TV Show F", Category: "TV Shows", Tags: []string{"anime"}, Status: StatusUploading, Trackers: []string{"tracker.g.com"}},
+		{Name: "Movie A", Category: "Movies", Tags: []string{"hd", "2023"}, Status: StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.a.com", "tracker.b.com"})},
+		{Name: "TV Show B", Category: "TV Shows", Tags: []string{"4k", "series"}, Status: StatusDownloading, Trackers: toTorrentTrackers([]string{"tracker.c.com"})},
+		{Name: "Game C", Category: "Games", Tags: []string{"pc", "rpg"}, Status: StatusPaused, Trackers: toTorrentTrackers([]string{"tracker.d.com"})},
+		{Name: "Music D", Category: "Music", Tags: []string{"flac"}, Status: StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.e.com"})},
+		{Name: "Movie E", Category: "Movies", Tags: []string{"sd", "old"}, Status: StatusStopped | StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.a.com", "tracker.f.com"})},
+		{Name: "TV Show F", Category: "TV Shows", Tags: []string{"anime"}, Status: StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.g.com"})},
 	}
 
 	tests := []struct {
@@ -157,5 +159,13 @@ func TestFilterTorrents(t *testing.T) {
 func sortTorrents(torrents []Torrent) {
 	slices.SortFunc(torrents, func(a, b Torrent) int {
 		return strings.Compare(a.Name, b.Name)
+	})
+}
+
+func toTorrentTrackers(hosts []string) []TorrentTracker {
+	return utils.SliceMap(hosts, func(host string) TorrentTracker {
+		return TorrentTracker{
+			URL: host,
+		}
 	})
 }

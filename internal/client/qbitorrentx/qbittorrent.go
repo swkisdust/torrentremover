@@ -58,7 +58,7 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 		return nil, err
 	}
 
-	return slices.Collect(utils.IterMap(slices.Values(torrents),
+	return utils.SliceMap(torrents,
 		func(qt qbittorrent.Torrent) model.Torrent {
 			prop, _ := qb.client.GetTorrentPropertiesCtx(ctx, qt.Hash)
 			if len(qt.Trackers) == 0 {
@@ -68,41 +68,41 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 				})
 			}
 			return model.FromQbit(qt, prop)
-		})), nil
+		}), nil
 }
 
 func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+	hashes := utils.SliceMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
-		}))
+		})
 
 	return qb.client.PauseCtx(ctx, hashes)
 }
 
 func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+	hashes := utils.SliceMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
-		}))
+		})
 
 	return qb.client.ResumeCtx(ctx, hashes)
 }
 
 func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+	hashes := utils.SliceMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
-		}))
+		})
 
 	return qb.client.SetTorrentUploadLimitCtx(ctx, hashes, int64(limit))
 }
 
 func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	hashes := slices.Collect(utils.IterMap(slices.Values(torrents),
+	hashes := utils.SliceMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
-		}))
+		})
 
 	if reannounce {
 		slog.Debug("pausing torrents", "strategy", name)
@@ -130,10 +130,10 @@ func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torre
 		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*4))
 	}
 
-	return qb.client.DeleteTorrents(slices.Collect(utils.IterMap(slices.Values(torrents),
+	return qb.client.DeleteTorrents(utils.SliceMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
-		})), deleteFiles)
+		}), deleteFiles)
 }
 
 func (qb *Qbitorrent) GetFreeSpaceOnDisk(ctx context.Context, path string) (model.Bytes, error) {

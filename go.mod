@@ -1,6 +1,6 @@
 module github.com/swkisdust/torrentremover
 
-go 1.24.4
+go 1.24.7
 
 require (
 	github.com/autobrr/go-deluge v1.3.1-0.20250503123942-245951c90584

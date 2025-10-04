@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	"github.com/expr-lang/expr/vm"
+	"github.com/goccy/go-yaml"
 	"github.com/hekmon/transmissionrpc/v3"
 
 	"github.com/swkisdust/torrentremover/internal/format"
@@ -65,7 +66,11 @@ func (s Status) String() string {
 }
 
 func (s *Status) UnmarshalYAML(b []byte) error {
-	statusStr := strings.Trim(strings.TrimSpace(string(b)), `"`)
+	var statusStr string
+	err := yaml.Unmarshal(b, &statusStr)
+	if err != nil {
+		return err
+	}
 	code := GetStatus(statusStr)
 	if code == 0 && statusStr != "" {
 		return fmt.Errorf("invalid status string in YAML: %q", statusStr)
@@ -161,7 +166,11 @@ func (b Bytes) KiB() int64 {
 }
 
 func (b *Bytes) UnmarshalYAML(buf []byte) error {
-	bytesStr := strings.Trim(string(buf), `"`)
+	var bytesStr string
+	err := yaml.Unmarshal(buf, &bytesStr)
+	if err != nil {
+		return err
+	}
 	bytes, err := utils.ParseBytes(bytesStr)
 	if err != nil {
 		return err

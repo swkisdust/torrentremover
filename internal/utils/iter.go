@@ -28,3 +28,13 @@ func Reduce[Sum, V any](f func(Sum, V) Sum, sum Sum, seq iter.Seq[V]) Sum {
 	}
 	return sum
 }
+
+func Filter[V any](f func(V) bool, seq iter.Seq[V]) iter.Seq[V] {
+	return func(yield func(V) bool) {
+		for v := range seq {
+			if f(v) && !yield(v) {
+				return
+			}
+		}
+	}
+}

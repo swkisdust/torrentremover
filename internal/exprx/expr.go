@@ -22,7 +22,7 @@ type RemoveExpr struct {
 }
 
 type env struct {
-	Torrents     []model.Torrent               `expr:"torrents"`
+	Torrents     []any                         `expr:"torrents"` // []model.Torrent
 	Disk         int64                         `expr:"disk"`
 	WantSpace    int64                         `expr:"want_space"`
 	SessionStats model.SessionStats            `expr:"stats"`
@@ -57,7 +57,7 @@ func New(prog *vm.Program, client client.Client) *RemoveExpr {
 
 func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
 	env := env{
-		Torrents:     torrents,
+		Torrents:     utils.SlicesMap(torrents, func(tor model.Torrent) any { return any(tor) }),
 		Disk:         options.Disk,
 		SessionStats: options.SessionStats,
 		Bytes:        utils.ParseBytes,

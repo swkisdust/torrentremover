@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func SlicesHave[S ~[]E, E comparable](s S, es ...E) bool {
+func SlicesHas[S ~[]E, E comparable](s S, es ...E) bool {
 	if len(s) < 1 || len(es) < 1 {
 		return false
 	}
@@ -18,7 +18,7 @@ func SlicesHave[S ~[]E, E comparable](s S, es ...E) bool {
 	return false
 }
 
-func SlicesHaveSubstrings(s []string, substrings ...string) bool {
+func SlicesHasSubstrings(s []string, substrings ...string) bool {
 	if len(s) < 1 || len(substrings) < 1 {
 		return false
 	}
@@ -33,6 +33,10 @@ func SlicesHaveSubstrings(s []string, substrings ...string) bool {
 	return false
 }
 
-func SliceMap[S ~[]EIn, EIn, EOut any](s S, f func(e EIn) EOut) []EOut {
+func SlicesMap[S ~[]EIn, EIn, EOut any](s S, f func(e EIn) EOut) []EOut {
 	return slices.Collect(IterMap(slices.Values(s), f))
+}
+
+func SlicesFilter[S ~[]E, E any](f func(E) bool, s S) S {
+	return slices.Collect(Filter(f, slices.Values(s)))
 }

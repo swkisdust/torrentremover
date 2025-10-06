@@ -38,43 +38,41 @@ func (t Torrent) String() string {
 	return t.Hash
 }
 
-func FilterTorrents(f Filter, freeSpace Bytes, torrents []Torrent) []Torrent {
+func FilterTorrents(f Filters, freeSpace Bytes, torrents []Torrent) []Torrent {
 	if f.Disk != 0 && freeSpace > f.Disk {
 		return nil
 	}
 
-	dup := make([]Torrent, len(torrents))
-	copy(dup, torrents)
+	return utils.SlicesFilter(func(t Torrent) bool {
+		trackers := utils.SlicesMap(t.Trackers, func(ts TorrentTracker) string { return ts.URL })
 
-	return slices.DeleteFunc(dup, func(torrent Torrent) bool {
-		trackers := utils.SliceMap(torrent.Trackers, func(trackerStat TorrentTracker) string { return trackerStat.URL })
+		if len(f.ExcludedCategories) > 0 && slices.Contains(f.ExcludedCategories, t.Category) {
+			return false
+		}
+		if len(f.ExcludedTags) > 0 && len(t.Tags) > 0 && utils.SlicesHas(f.ExcludedTags, t.Tags...) {
+			return false
+		}
+		if len(f.ExcludedStatus) > 0 && ContainStatus(f.ExcludedStatus, t.Status) {
+			return false
+		}
+		if len(f.ExcludedTrackers) > 0 && len(t.Trackers) > 0 && utils.SlicesHasSubstrings(trackers, f.ExcludedTrackers...) {
+			return false
+		}
+		if len(f.Categories) > 0 && !slices.Contains(f.Categories, t.Category) {
+			return false
+		}
+		if len(f.Tags) > 0 && !utils.SlicesHas(f.Tags, t.Tags...) {
+			return false
+		}
+		if len(f.Status) > 0 && !ContainStatus(f.Status, t.Status) {
+			return false
+		}
+		if len(f.Trackers) > 0 && !utils.SlicesHasSubstrings(trackers, f.Trackers...) {
+			return false
+		}
 
-		if len(f.ExcludedCategories) > 0 && slices.Contains(f.ExcludedCategories, torrent.Category) {
-			return true
-		}
-		if len(f.ExcludedTags) > 0 && len(torrent.Tags) > 0 && utils.SlicesHave(f.ExcludedTags, torrent.Tags...) {
-			return true
-		}
-		if len(f.ExcludedStatus) > 0 && ContainStatus(f.ExcludedStatus, torrent.Status) {
-			return true
-		}
-		if len(f.ExcludedTrackers) > 0 && len(torrent.Trackers) > 0 && utils.SlicesHaveSubstrings(trackers, f.ExcludedTrackers...) {
-			return true
-		}
-		if len(f.Categories) > 0 && !slices.Contains(f.Categories, torrent.Category) {
-			return true
-		}
-		if len(f.Tags) > 0 && !utils.SlicesHave(f.Tags, torrent.Tags...) {
-			return true
-		}
-		if len(f.Status) > 0 && !ContainStatus(f.Status, torrent.Status) {
-			return true
-		}
-		if len(f.Trackers) > 0 && !utils.SlicesHaveSubstrings(trackers, f.Trackers...) {
-			return true
-		}
-		return false
-	})
+		return true
+	}, torrents)
 }
 
 type TorrentTracker struct {

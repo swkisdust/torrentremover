@@ -16,7 +16,7 @@ import (
 
 type Strategy struct {
 	Name        string      `json:"name"`
-	Filter      Filter      `json:"filter"`
+	Filter      Filters     `json:"filters"`
 	Action      string      `json:"action,omitempty"`
 	Limit       Bytes       `json:"limit,omitempty"`
 	Reannounce  bool        `json:"reannounce,omitempty"`
@@ -28,7 +28,7 @@ type Strategy struct {
 	Prog        *vm.Program `json:"-"`
 }
 
-type Filter struct {
+type Filters struct {
 	Categories format.Array[string] `json:"categories,omitempty"`
 	Tags       format.Array[string] `json:"tags,omitempty"`
 	Trackers   format.Array[string] `json:"trackers,omitempty"`

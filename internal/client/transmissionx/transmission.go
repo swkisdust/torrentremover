@@ -56,14 +56,14 @@ func (tr *Transmission) GetTorrents(ctx context.Context) ([]model.Torrent, error
 		return nil, err
 	}
 
-	return utils.SliceMap(torrents,
+	return utils.SlicesMap(torrents,
 		func(tt transmissionrpc.Torrent) model.Torrent {
 			return model.FromTrans(tt)
 		}), nil
 }
 
 func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	ids := utils.SliceMap(torrents,
+	ids := utils.SlicesMap(torrents,
 		func(t model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
@@ -72,7 +72,7 @@ func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []model.Torr
 }
 
 func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	ids := utils.SliceMap(torrents,
+	ids := utils.SlicesMap(torrents,
 		func(t model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
@@ -81,7 +81,7 @@ func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []model.Tor
 }
 
 func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	ids := utils.SliceMap(torrents,
+	ids := utils.SlicesMap(torrents,
 		func(t model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
@@ -102,7 +102,7 @@ func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.T
 }
 
 func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	ids := utils.SliceMap(torrents,
+	ids := utils.SlicesMap(torrents,
 		func(t model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})

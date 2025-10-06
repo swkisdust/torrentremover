@@ -17,128 +17,135 @@ func TestFilterTorrents(t *testing.T) {
 		{Name: "Music D", Category: "Music", Tags: []string{"flac"}, Status: StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.e.com"})},
 		{Name: "Movie E", Category: "Movies", Tags: []string{"sd", "old"}, Status: StatusStopped | StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.a.com", "tracker.f.com"})},
 		{Name: "TV Show F", Category: "TV Shows", Tags: []string{"anime"}, Status: StatusUploading, Trackers: toTorrentTrackers([]string{"tracker.g.com"})},
+		{Name: "TV Show G", Category: "TV Shows", Tags: []string{"hd"}, Status: StatusError, Trackers: toTorrentTrackers([]string{"tracker.a.com"})},
 	}
 
 	tests := []struct {
 		name     string
-		filter   Filter
+		filter   Filters
 		input    []Torrent
 		expected []Torrent
 	}{
 		{
 			name:     "No filter (should return all)",
-			filter:   Filter{},
+			filter:   Filters{},
 			input:    testTorrents,
 			expected: testTorrents,
 		},
 		{
 			name:     "Exclude Movies category",
-			filter:   Filter{ExcludedCategories: []string{"Movies"}},
+			filter:   Filters{ExcludedCategories: []string{"Movies"}},
 			input:    testTorrents,
-			expected: []Torrent{testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[5]},
+			expected: []Torrent{testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[5], testTorrents[6]},
 		},
 		{
 			name:     "Exclude 'hd' tag",
-			filter:   Filter{ExcludedTags: []string{"hd"}},
+			filter:   Filters{ExcludedTags: []string{"hd"}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[4], testTorrents[5]},
 		},
 		{
 			name:     "Exclude 'paused' status (using bit flag)",
-			filter:   Filter{ExcludedStatus: []Status{StatusPaused}},
+			filter:   Filters{ExcludedStatus: []Status{StatusPaused}},
 			input:    testTorrents,
-			expected: []Torrent{testTorrents[0], testTorrents[1], testTorrents[3], testTorrents[4], testTorrents[5]},
+			expected: []Torrent{testTorrents[0], testTorrents[1], testTorrents[3], testTorrents[4], testTorrents[5], testTorrents[6]},
 		},
 		{
 			name:     "Exclude 'error' status (using bit flag, affects combined status)",
-			filter:   Filter{ExcludedStatus: []Status{StatusError}},
+			filter:   Filters{ExcludedStatus: []Status{StatusError}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[0], testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[4], testTorrents[5]},
 		},
 		{
 			name:     "Exclude 'paused' AND 'error' status (any of these flags)",
-			filter:   Filter{ExcludedStatus: []Status{StatusPaused, StatusError}},
+			filter:   Filters{ExcludedStatus: []Status{StatusPaused, StatusError}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[0], testTorrents[1], testTorrents[3], testTorrents[4], testTorrents[5]},
 		},
 		{
 			name:     "Exclude 'tracker.b.com' substring in trackers",
-			filter:   Filter{ExcludedTrackers: []string{"tracker.b.com"}},
+			filter:   Filters{ExcludedTrackers: []string{"tracker.b.com"}},
 			input:    testTorrents,
-			expected: []Torrent{testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[4], testTorrents[5]},
+			expected: []Torrent{testTorrents[1], testTorrents[2], testTorrents[3], testTorrents[4], testTorrents[5], testTorrents[6]},
 		},
 		{
 			name:     "Include only 'TV Shows' category",
-			filter:   Filter{Categories: []string{"TV Shows"}},
+			filter:   Filters{Categories: []string{"TV Shows"}},
 			input:    testTorrents,
-			expected: []Torrent{testTorrents[1], testTorrents[5]},
+			expected: []Torrent{testTorrents[1], testTorrents[5], testTorrents[6]},
 		},
 		{
 			name:     "Include only '4k' tag",
-			filter:   Filter{Tags: []string{"4k"}},
+			filter:   Filters{Tags: []string{"4k"}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[1]},
 		},
 		{
 			name:     "Include only 'uploading' status",
-			filter:   Filter{Status: []Status{StatusUploading}},
+			filter:   Filters{Status: []Status{StatusUploading}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[0], testTorrents[3], testTorrents[4], testTorrents[5]},
 		},
 
 		{
 			name:     "Include only 'downloading' status (using bit flag, affects combined status)",
-			filter:   Filter{Status: []Status{StatusDownloading}},
+			filter:   Filters{Status: []Status{StatusDownloading}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[1]},
 		},
 		{
 			name:     "Include only 'paused' OR 'error' status",
-			filter:   Filter{Status: []Status{StatusPaused, StatusError}},
+			filter:   Filters{Status: []Status{StatusPaused, StatusError}},
 			input:    testTorrents,
-			expected: []Torrent{testTorrents[2]},
+			expected: []Torrent{testTorrents[2], testTorrents[6]},
 		},
 		{
 			name:     "Include only 'tracker.c.com' substring in trackers",
-			filter:   Filter{Trackers: []string{"tracker.c.com"}},
+			filter:   Filters{Trackers: []string{"tracker.c.com"}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[1]},
 		},
 		{
+			name:     "Include only 'tracker.a.com' substring AND 'anime' OR 'hd' tag in trackers",
+			filter:   Filters{Trackers: []string{"tracker.a.com"}, Tags: []string{"anime", "hd"}},
+			input:    testTorrents,
+			expected: []Torrent{testTorrents[0], testTorrents[6]},
+		},
+		{
 			name:     "Combined filter: Exclude 'Movies' AND Include only 'uploading' status",
-			filter:   Filter{ExcludedCategories: []string{"Movies"}, Status: []Status{StatusUploading}},
+			filter:   Filters{ExcludedCategories: []string{"Movies"}, Status: []Status{StatusUploading}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[3], testTorrents[5]},
 		},
 		{
 			name:     "Combined filter: Exclude 'old' tag AND Include 'Movies' category",
-			filter:   Filter{ExcludedTags: []string{"old"}, Categories: []string{"Movies"}},
+			filter:   Filters{ExcludedTags: []string{"old"}, Categories: []string{"Movies"}},
 			input:    testTorrents,
 			expected: []Torrent{testTorrents[0]},
 		},
 		{
 			name:     "Disk filter: Has more remaining space",
-			filter:   Filter{Disk: 1024},
+			filter:   Filters{Disk: 1024},
 			input:    testTorrents,
 			expected: nil,
 		},
 		{
 			name:     "Disk filter: Has less remaining space",
-			filter:   Filter{Disk: 4096},
+			filter:   Filters{Disk: 4096},
 			input:    testTorrents,
 			expected: testTorrents,
 		},
 		{
 			name:     "Empty input torrents",
-			filter:   Filter{Categories: []string{"Movies"}},
+			filter:   Filters{Categories: []string{"Movies"}},
 			input:    []Torrent{},
-			expected: []Torrent{},
+			expected: nil,
 		},
 		{
 			name:     "No matching torrents for filter",
-			filter:   Filter{Tags: []string{"nonexistent_tag"}},
+			filter:   Filters{Tags: []string{"nonexistent_tag"}},
 			input:    testTorrents,
-			expected: []Torrent{},
+			expected: nil,
 		},
 	}
 
@@ -163,7 +170,7 @@ func sortTorrents(torrents []Torrent) {
 }
 
 func toTorrentTrackers(hosts []string) []TorrentTracker {
-	return utils.SliceMap(hosts, func(host string) TorrentTracker {
+	return utils.SlicesMap(hosts, func(host string) TorrentTracker {
 		return TorrentTracker{
 			URL: host,
 		}

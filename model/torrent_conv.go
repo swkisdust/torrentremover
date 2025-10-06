@@ -34,7 +34,7 @@ func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) T
 		AvgUpSpeed:   int64(prop.UpSpeedAvg),
 		Downloaded:   torrent.Downloaded,
 		Uploaded:     torrent.Uploaded,
-		Trackers: utils.SliceMap(torrent.Trackers,
+		Trackers: utils.SlicesMap(torrent.Trackers,
 			func(qt qbittorrent.TorrentTracker) TorrentTracker {
 				return TorrentTracker{
 					URL:     qt.Url,

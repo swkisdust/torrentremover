@@ -58,7 +58,7 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 		return nil, err
 	}
 
-	return utils.SliceMap(torrents,
+	return utils.SlicesMap(torrents,
 		func(qt qbittorrent.Torrent) model.Torrent {
 			prop, _ := qb.client.GetTorrentPropertiesCtx(ctx, qt.Hash)
 			if len(qt.Trackers) == 0 {
@@ -72,7 +72,7 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 }
 
 func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := utils.SliceMap(torrents,
+	hashes := utils.SlicesMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
 		})
@@ -81,7 +81,7 @@ func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []model.Torren
 }
 
 func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := utils.SliceMap(torrents,
+	hashes := utils.SlicesMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
 		})
@@ -90,7 +90,7 @@ func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []model.Torre
 }
 
 func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	hashes := utils.SliceMap(torrents,
+	hashes := utils.SlicesMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
 		})
@@ -99,7 +99,7 @@ func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []model.Tor
 }
 
 func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	hashes := utils.SliceMap(torrents,
+	hashes := utils.SlicesMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
 		})
@@ -130,7 +130,7 @@ func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torre
 		time.Sleep(utils.IfOr(interval != 0, interval, time.Second*4))
 	}
 
-	return qb.client.DeleteTorrents(utils.SliceMap(torrents,
+	return qb.client.DeleteTorrents(utils.SlicesMap(torrents,
 		func(t model.Torrent) string {
 			return t.Hash
 		}), deleteFiles)

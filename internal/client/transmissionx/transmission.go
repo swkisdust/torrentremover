@@ -50,39 +50,39 @@ func NewTransmission(config map[string]any) (*Transmission, error) {
 	return &tr, nil
 }
 
-func (tr *Transmission) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+func (tr *Transmission) GetTorrents(ctx context.Context) ([]*model.Torrent, error) {
 	torrents, err := tr.client.TorrentGetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	return utils.SlicesMap(torrents,
-		func(tt transmissionrpc.Torrent) model.Torrent {
-			return model.FromTrans(tt)
+		func(tt transmissionrpc.Torrent) *model.Torrent {
+			return model.FromTrans(&tt)
 		}), nil
 }
 
-func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	ids := utils.SlicesMap(torrents,
-		func(t model.Torrent) int64 {
+		func(t *model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
 
 	return tr.client.TorrentStopIDs(ctx, ids)
 }
 
-func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	ids := utils.SlicesMap(torrents,
-		func(t model.Torrent) int64 {
+		func(t *model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
 
 	return tr.client.TorrentStartIDs(ctx, ids)
 }
 
-func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []*model.Torrent, limit model.Bytes) error {
 	ids := utils.SlicesMap(torrents,
-		func(t model.Torrent) int64 {
+		func(t *model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
 
@@ -101,9 +101,9 @@ func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []model.T
 	})
 }
 
-func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []*model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	ids := utils.SlicesMap(torrents,
-		func(t model.Torrent) int64 {
+		func(t *model.Torrent) int64 {
 			return t.ClientData.(int64)
 		})
 

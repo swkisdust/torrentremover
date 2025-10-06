@@ -12,8 +12,8 @@ import (
 	"github.com/swkisdust/torrentremover/internal/utils"
 )
 
-func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) Torrent {
-	return Torrent{
+func FromQbit(torrent *qbittorrent.Torrent, prop *qbittorrent.TorrentProperties) *Torrent {
+	return &Torrent{
 		AddedTime:    time.Unix(torrent.AddedOn, 0),
 		LastActivity: utils.IfOr(torrent.LastActivity == 0, time.Time{}, time.Unix(torrent.LastActivity, 0)),
 		TimeElapsed:  time.Duration(prop.TimeElapsed) * time.Second,
@@ -45,8 +45,8 @@ func FromQbit(torrent qbittorrent.Torrent, prop qbittorrent.TorrentProperties) T
 	}
 }
 
-func FromTrans(torrent transmissionrpc.Torrent) Torrent {
-	return Torrent{
+func FromTrans(torrent *transmissionrpc.Torrent) *Torrent {
+	return &Torrent{
 		AddedTime:    *torrent.AddedDate,
 		LastActivity: utils.IfOr(torrent.ActivityDate.Unix() == 0, time.Time{}, *torrent.ActivityDate),
 		TimeElapsed:  time.Since(*torrent.AddedDate),
@@ -70,23 +70,23 @@ func FromTrans(torrent transmissionrpc.Torrent) Torrent {
 		AvgUpSpeed: utils.SafeDivide(*torrent.UploadedEver, int64(torrent.TimeSeeding.Seconds())),
 		Downloaded: *torrent.DownloadedEver,
 		Uploaded:   *torrent.UploadedEver,
-		Trackers: slices.Collect(utils.IterMap(slices.Values(torrent.TrackerStats),
+		Trackers: utils.SlicesMap(torrent.TrackerStats,
 			func(tt transmissionrpc.TrackerStats) TorrentTracker {
 				return TorrentTracker{
 					URL:     tt.Announce,
 					Status:  int(tt.AnnounceState),
 					Message: tt.LastAnnounceResult,
 				}
-			})),
+			}),
 
 		ClientData: *torrent.ID,
 	}
 }
 
-func FromDeluge(ts *deluge.TorrentStatus, label string) Torrent {
+func FromDeluge(ts *deluge.TorrentStatus, label string) *Torrent {
 	addedTime := time.Unix(int64(ts.TimeAdded), 0)
 
-	return Torrent{
+	return &Torrent{
 		AddedTime:    addedTime,
 		LastActivity: utils.IfOr(ts.LastSeenComplete == 0, time.Time{}, time.Unix(ts.LastSeenComplete, 0)),
 		TimeElapsed:  time.Since(addedTime),

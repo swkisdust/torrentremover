@@ -52,14 +52,14 @@ func NewQbittorrent(config map[string]any) (*Qbitorrent, error) {
 	return &qb, nil
 }
 
-func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]*model.Torrent, error) {
 	torrents, err := qb.client.GetTorrentsCtx(ctx, qbittorrent.TorrentFilterOptions{IncludeTrackers: true})
 	if err != nil {
 		return nil, err
 	}
 
 	return utils.SlicesMap(torrents,
-		func(qt qbittorrent.Torrent) model.Torrent {
+		func(qt qbittorrent.Torrent) *model.Torrent {
 			prop, _ := qb.client.GetTorrentPropertiesCtx(ctx, qt.Hash)
 			if len(qt.Trackers) == 0 {
 				trackers, _ := qb.client.GetTorrentTrackersCtx(ctx, qt.Hash)
@@ -67,40 +67,40 @@ func (qb *Qbitorrent) GetTorrents(ctx context.Context) ([]model.Torrent, error) 
 					return strings.Contains(tt.Url, "[DHT]") || strings.Contains(tt.Url, "[PeX]") || strings.Contains(tt.Url, "[LSD]")
 				})
 			}
-			return model.FromQbit(qt, prop)
+			return model.FromQbit(&qt, &prop)
 		}), nil
 }
 
-func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (qb *Qbitorrent) PauseTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	hashes := utils.SlicesMap(torrents,
-		func(t model.Torrent) string {
+		func(t *model.Torrent) string {
 			return t.Hash
 		})
 
 	return qb.client.PauseCtx(ctx, hashes)
 }
 
-func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (qb *Qbitorrent) ResumeTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	hashes := utils.SlicesMap(torrents,
-		func(t model.Torrent) string {
+		func(t *model.Torrent) string {
 			return t.Hash
 		})
 
 	return qb.client.ResumeCtx(ctx, hashes)
 }
 
-func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+func (qb *Qbitorrent) ThrottleTorrents(ctx context.Context, torrents []*model.Torrent, limit model.Bytes) error {
 	hashes := utils.SlicesMap(torrents,
-		func(t model.Torrent) string {
+		func(t *model.Torrent) string {
 			return t.Hash
 		})
 
 	return qb.client.SetTorrentUploadLimitCtx(ctx, hashes, int64(limit))
 }
 
-func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []*model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	hashes := utils.SlicesMap(torrents,
-		func(t model.Torrent) string {
+		func(t *model.Torrent) string {
 			return t.Hash
 		})
 
@@ -131,7 +131,7 @@ func (qb *Qbitorrent) DeleteTorrents(ctx context.Context, torrents []model.Torre
 	}
 
 	return qb.client.DeleteTorrents(utils.SlicesMap(torrents,
-		func(t model.Torrent) string {
+		func(t *model.Torrent) string {
 			return t.Hash
 		}), deleteFiles)
 }

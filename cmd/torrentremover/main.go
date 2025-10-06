@@ -188,7 +188,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 			if err != nil {
 				slog.Warn("failed to get session stats", "strategy", st.Name, "client_id", profile.Client, "error", err)
 			}
-			filteredTorrents := model.FilterTorrents(st.Filter, freeSpace, torrents)
+			filteredTorrents := model.FilterTorrents(&st.Filter, freeSpace, torrents)
 			if len(filteredTorrents) < 1 {
 				slog.Debug("no matching torrents found", "strategy", st.Name)
 				continue

@@ -86,7 +86,7 @@ func NewDeluge(ctx context.Context, config map[string]any) (*Deluge, error) {
 	return &d, nil
 }
 
-func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+func (d *Deluge) GetTorrents(ctx context.Context) ([]*model.Torrent, error) {
 	torrents, err := d.client.TorrentsStatus(ctx, "", nil)
 	if err != nil {
 		return nil, err
@@ -102,29 +102,29 @@ func (d *Deluge) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
 	}
 
 	return slices.Collect(utils.Seq2To1(maps.All(torrents),
-		func(id string, ds *deluge.TorrentStatus) model.Torrent {
+		func(id string, ds *deluge.TorrentStatus) *model.Torrent {
 			return model.FromDeluge(ds, labels[id])
 		})), nil
 }
 
-func (d *Deluge) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := utils.SlicesMap(torrents, func(t model.Torrent) string {
+func (d *Deluge) PauseTorrents(ctx context.Context, torrents []*model.Torrent) error {
+	hashes := utils.SlicesMap(torrents, func(t *model.Torrent) string {
 		return t.Hash
 	})
 
 	return d.client.PauseTorrents(ctx, hashes...)
 }
 
-func (d *Deluge) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
-	hashes := utils.SlicesMap(torrents, func(t model.Torrent) string {
+func (d *Deluge) ResumeTorrents(ctx context.Context, torrents []*model.Torrent) error {
+	hashes := utils.SlicesMap(torrents, func(t *model.Torrent) string {
 		return t.Hash
 	})
 
 	return d.client.ResumeTorrents(ctx, hashes...)
 }
 
-func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
-	hashes := utils.SlicesMap(torrents, func(t model.Torrent) string {
+func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []*model.Torrent, limit model.Bytes) error {
+	hashes := utils.SlicesMap(torrents, func(t *model.Torrent) string {
 		return t.Hash
 	})
 
@@ -150,8 +150,8 @@ func (d *Deluge) ThrottleTorrents(ctx context.Context, torrents []model.Torrent,
 	return wrapErr
 }
 
-func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	hashes := utils.SlicesMap(torrents, func(t model.Torrent) string {
+func (d *Deluge) DeleteTorrents(ctx context.Context, torrents []*model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+	hashes := utils.SlicesMap(torrents, func(t *model.Torrent) string {
 		return t.Hash
 	})
 

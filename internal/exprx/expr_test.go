@@ -11,10 +11,10 @@ import (
 
 type mockClient struct {
 	t        *testing.T
-	expected []model.Torrent
+	expected []*model.Torrent
 }
 
-var testCases = []model.Torrent{
+var testCases = []*model.Torrent{
 	{
 		Hash:         "test1",
 		Name:         "test1",
@@ -53,26 +53,26 @@ var testCases = []model.Torrent{
 	},
 }
 
-func (c *mockClient) GetTorrents(ctx context.Context) ([]model.Torrent, error) {
+func (c *mockClient) GetTorrents(ctx context.Context) ([]*model.Torrent, error) {
 	return testCases, nil
 }
 
-func (c *mockClient) PauseTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (c *mockClient) PauseTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	c.t.Logf("received torrents %v", torrents)
 	return nil
 }
 
-func (c *mockClient) ResumeTorrents(ctx context.Context, torrents []model.Torrent) error {
+func (c *mockClient) ResumeTorrents(ctx context.Context, torrents []*model.Torrent) error {
 	c.t.Logf("received torrents %v", torrents)
 	return nil
 }
 
-func (c *mockClient) ThrottleTorrents(ctx context.Context, torrents []model.Torrent, limit model.Bytes) error {
+func (c *mockClient) ThrottleTorrents(ctx context.Context, torrents []*model.Torrent, limit model.Bytes) error {
 	c.t.Logf("received torrents %v", torrents)
 	return nil
 }
 
-func (c *mockClient) DeleteTorrents(ctx context.Context, torrents []model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
+func (c *mockClient) DeleteTorrents(ctx context.Context, torrents []*model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
 	c.t.Logf("received torrents %v", torrents)
 	if !reflect.DeepEqual(c.expected, torrents) {
 		c.t.Errorf("excepted %v, got %v", c.expected, torrents)

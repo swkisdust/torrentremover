@@ -38,14 +38,16 @@ func (t Torrent) String() string {
 	return t.Hash
 }
 
-func FilterTorrents(f Filters, freeSpace Bytes, torrents []Torrent) []Torrent {
+func FilterTorrents(f *Filters, freeSpace Bytes, torrents []*Torrent) []*Torrent {
 	if f.Disk != 0 && freeSpace > f.Disk {
 		return nil
 	}
 
-	return utils.SlicesFilter(func(t Torrent) bool {
-		trackers := utils.SlicesMap(t.Trackers, func(ts TorrentTracker) string { return ts.URL })
+	accesser := func(tt TorrentTracker) string {
+		return tt.URL
+	}
 
+	return utils.SlicesFilter(func(t *Torrent) bool {
 		if len(f.ExcludedCategories) > 0 && slices.Contains(f.ExcludedCategories, t.Category) {
 			return false
 		}
@@ -55,7 +57,7 @@ func FilterTorrents(f Filters, freeSpace Bytes, torrents []Torrent) []Torrent {
 		if len(f.ExcludedStatus) > 0 && ContainStatus(f.ExcludedStatus, t.Status) {
 			return false
 		}
-		if len(f.ExcludedTrackers) > 0 && len(t.Trackers) > 0 && utils.SlicesHasSubstrings(trackers, f.ExcludedTrackers...) {
+		if len(f.ExcludedTrackers) > 0 && len(t.Trackers) > 0 && utils.SlicesHasSubstringsFunc(t.Trackers, accesser, f.ExcludedTrackers...) {
 			return false
 		}
 		if len(f.Categories) > 0 && !slices.Contains(f.Categories, t.Category) {
@@ -67,7 +69,7 @@ func FilterTorrents(f Filters, freeSpace Bytes, torrents []Torrent) []Torrent {
 		if len(f.Status) > 0 && !ContainStatus(f.Status, t.Status) {
 			return false
 		}
-		if len(f.Trackers) > 0 && !utils.SlicesHasSubstrings(trackers, f.Trackers...) {
+		if len(f.Trackers) > 0 && !utils.SlicesHasSubstringsFunc(t.Trackers, accesser, f.Trackers...) {
 			return false
 		}
 

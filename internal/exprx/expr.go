@@ -55,9 +55,9 @@ func New(prog *vm.Program, client client.Client) *RemoveExpr {
 	return &RemoveExpr{prog, client}
 }
 
-func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name string, options RunOptions) error {
+func (x *RemoveExpr) Run(ctx context.Context, torrents []*model.Torrent, name string, options RunOptions) error {
 	env := env{
-		Torrents:     utils.SlicesMap(torrents, func(tor model.Torrent) any { return any(tor) }),
+		Torrents:     utils.SlicesMap(torrents, func(tor *model.Torrent) any { return any(tor) }),
 		Disk:         options.Disk,
 		SessionStats: options.SessionStats,
 		Bytes:        utils.ParseBytes,
@@ -74,9 +74,9 @@ func (x *RemoveExpr) Run(ctx context.Context, torrents []model.Torrent, name str
 		return fmt.Errorf("expr returned an unexpected type: %T, expected []any", fti)
 	}
 
-	ft := make([]model.Torrent, 0, len(rawFt))
+	ft := make([]*model.Torrent, 0, len(rawFt))
 	for _, item := range rawFt {
-		t, ok := item.(model.Torrent)
+		t, ok := item.(*model.Torrent)
 		if !ok {
 			return fmt.Errorf("element in filtered list is not model.Torrent, got %T, value %v", item, item)
 		}

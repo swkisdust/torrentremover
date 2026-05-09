@@ -21,7 +21,7 @@ func (cmpPatcher) Visit(node *ast.Node) {
 		return
 	}
 
-	if !(n.Left.Type().OverflowInt(math.MaxInt32) || !n.Right.Type().OverflowInt(math.MaxInt32)) {
+	if !(n.Left.Type().OverflowInt(math.MaxInt32) || n.Right.Type().OverflowInt(math.MaxInt32)) {
 		return
 	}
 

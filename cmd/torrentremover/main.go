@@ -170,7 +170,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 			continue
 		}
 		slog.Debug("available torrents", "value", torrents)
-		for _, st := range profile.Strategy {
+		for i, st := range profile.Strategy {
 			if st.Prog == nil {
 				prog, err := exprx.Compile(st.RemoveExpr, client)
 				if err != nil {
@@ -178,6 +178,7 @@ func run(ctx context.Context, c *model.Config, clientMap map[string]client.Clien
 					continue
 				}
 				st.Prog = prog
+				profile.Strategy[i] = st
 			}
 
 			freeSpace, err := client.GetFreeSpaceOnDisk(ctx, utils.IfOr(st.Mountpath != "", st.Mountpath, profile.Mountpath))

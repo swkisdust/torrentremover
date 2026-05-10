@@ -142,6 +142,12 @@ func TestFilterTorrents(t *testing.T) {
 			expected: []*Torrent{},
 		},
 		{
+			name:     "Nil input torrents",
+			filter:   Filters{Categories: []string{"Movies"}},
+			input:    nil,
+			expected: []*Torrent{},
+		},
+		{
 			name:     "No matching torrents for filter",
 			filter:   Filters{Tags: []string{"nonexistent_tag"}},
 			input:    testTorrents,
@@ -151,16 +157,28 @@ func TestFilterTorrents(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := FilterTorrents(&tt.filter, 2048, tt.input)
+			input := cloneTorrents(tt.input)
+			got := FilterTorrents(&tt.filter, 2048, input)
 
+			expected := cloneTorrents(tt.expected)
 			sortTorrents(got)
-			sortTorrents(tt.expected)
+			sortTorrents(expected)
 
-			if !reflect.DeepEqual(got, tt.expected) {
-				t.Errorf("FilterTorrents(%+v, %v) = \nGOT:  %v\nWANT: %v", tt.filter, tt.input, got, tt.expected)
+			if !reflect.DeepEqual(got, expected) {
+				t.Errorf("FilterTorrents(%+v, %v) = \nGOT:  %v\nWANT: %v", tt.filter, tt.input, got, expected)
 			}
 		})
 	}
+}
+
+func cloneTorrents(torrents []*Torrent) []*Torrent {
+	if torrents == nil {
+		return nil
+	}
+
+	cloned := make([]*Torrent, len(torrents))
+	copy(cloned, torrents)
+	return cloned
 }
 
 func sortTorrents(torrents []*Torrent) {

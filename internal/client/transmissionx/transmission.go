@@ -63,28 +63,19 @@ func (tr *Transmission) GetTorrents(ctx context.Context) ([]*model.Torrent, erro
 }
 
 func (tr *Transmission) PauseTorrents(ctx context.Context, torrents []*model.Torrent) error {
-	ids := utils.SlicesMap(torrents,
-		func(t *model.Torrent) int64 {
-			return t.ClientData.(int64)
-		})
+	ids := tr.convertIDs(torrents)
 
 	return tr.client.TorrentStopIDs(ctx, ids)
 }
 
 func (tr *Transmission) ResumeTorrents(ctx context.Context, torrents []*model.Torrent) error {
-	ids := utils.SlicesMap(torrents,
-		func(t *model.Torrent) int64 {
-			return t.ClientData.(int64)
-		})
+	ids := tr.convertIDs(torrents)
 
 	return tr.client.TorrentStartIDs(ctx, ids)
 }
 
 func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []*model.Torrent, limit model.Bytes) error {
-	ids := utils.SlicesMap(torrents,
-		func(t *model.Torrent) int64 {
-			return t.ClientData.(int64)
-		})
+	ids := tr.convertIDs(torrents)
 
 	var uploadSpeed int64
 	if limit == -1 {
@@ -102,10 +93,7 @@ func (tr *Transmission) ThrottleTorrents(ctx context.Context, torrents []*model.
 }
 
 func (tr *Transmission) DeleteTorrents(ctx context.Context, torrents []*model.Torrent, name string, reannounce, deleteFiles bool, interval time.Duration) error {
-	ids := utils.SlicesMap(torrents,
-		func(t *model.Torrent) int64 {
-			return t.ClientData.(int64)
-		})
+	ids := tr.convertIDs(torrents)
 
 	if reannounce {
 		slog.Debug("pausing torrents", "strategy", name)
@@ -157,4 +145,11 @@ func (tr *Transmission) SessionStats(ctx context.Context) (model.SessionStats, e
 	stats.TotalDlSpeed = tstats.DownloadSpeed
 	stats.TotalUpSpeed = tstats.UploadSpeed
 	return stats, nil
+}
+
+func (tr *Transmission) convertIDs(torrents []*model.Torrent) []int64 {
+	return utils.SlicesMap(torrents,
+		func(t *model.Torrent) int64 {
+			return t.ClientData.(int64)
+		})
 }
